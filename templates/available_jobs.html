@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Jobs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+        }
+        .job {
+            background: white;
+            padding: 18px;
+            margin-bottom: 14px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Available Jobs</h2>
+    <p><a href="/jobs/assigned/">My Assigned Jobs</a> | <a href="/dashboard/">Dashboard</a></p>
+
+    {% for job in jobs %}
+        <div class="job">
+            <p><strong>Client:</strong> {{ job.client.username }}</p>
+            <p><strong>Description:</strong> {{ job.description }}</p>
+            <p><strong>Status:</strong> {{ job.status }}</p>
+            <a class="btn" href="/jobs/assign/{{ job.id }}/">Take This Job</a>
+        </div>
+    {% empty %}
+        <p>No available jobs right now.</p>
+    {% endfor %}
+</body>
+</html>

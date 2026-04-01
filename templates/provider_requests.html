@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Provider Requests</title>
+</head>
+<body>
+    <h2>Requests from Clients</h2>
+
+    {% for r in requests %}
+        <div>
+            <p><strong>Client:</strong> {{ r.client.username }}</p>
+            <p><strong>Message:</strong> {{ r.message }}</p>
+            <p><strong>Status:</strong> {{ r.status }}</p>
+        </div>
+    {% empty %}
+        <p>No requests</p>
+    {% endfor %}
+
+    <p><a href="/dashboard/">Back to Dashboard</a></p>
+</body>
+</html>
