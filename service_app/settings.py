@@ -7,7 +7,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'dev-secret-key'
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost,buildmity-production.up.railway.app"
+).split(",")
+
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://buildmity-production.up.railway.app"
+).split(",")
 
 
 # 🔧 APPLICATIONS
