@@ -9,12 +9,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "127.0.0.1,localhost,buildmity-production.up.railway.app"
+    "127.0.0.1,localhost,buildmity-production.up.railway.app,buildimity.com,www.buildimity.com"
 ).split(",")
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "https://buildmity-production.up.railway.app"
+    "https://buildmity-production.up.railway.app,https://buildimity.com,https://www.buildimity.com"
 ).split(",")
 
 
