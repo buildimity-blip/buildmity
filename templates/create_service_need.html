@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request a Service</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            padding: 20px;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        h1 {
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 15px;
+        }
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .help {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+        }
+        .btn {
+            display: inline-block;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+        .notice {
+            background: #fff7ed;
+            color: #9a3412;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #fdba74;
+        }
+        @media (max-width: 700px) {
+            .row { grid-template-columns: 1fr; }
+            .card { padding: 18px; }
+        }
+    </style>
+    <script>
+        function toggleCustomService() {
+            const serviceSelect = document.getElementById('service');
+            const customWrap = document.getElementById('custom-service-wrap');
+            if (!serviceSelect.value) {
+                customWrap.style.display = 'block';
+            } else {
+                customWrap.style.display = 'block';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
+            toggleCustomService();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Request a Service</h1>
+            <p class="subtitle">Tell us what you need and we’ll help you find the right provider.</p>
+
+            <div class="notice">
+                If your service is not listed, enter it in the “Custom Service Name” field. The admin will be notified.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="service">Choose a Listed Service</label>
+                    <select name="service" id="service" onchange="toggleCustomService()">
+                        <option value="">-- Select a service or leave blank --</option>
+                        {% for service in services %}
+                            <option value="{{ service.id }}">{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="help">Pick from existing services if available.</div>
+                </div>
+
+                <div class="form-group" id="custom-service-wrap">
+                    <label for="custom_service_name">Custom Service Name</label>
+                    <input
+                        type="text"
+                        name="custom_service_name"
+                        id="custom_service_name"
+                        placeholder="Example: Borehole repair, CCTV installation, gypsum ceiling"
+                    >
+                    <div class="help">Use this when the service is not listed above.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Describe What You Need</label>
+                    <textarea
+                        name="description"
+                        id="description"
+                        placeholder="Explain the work clearly. Example: I need urgent plumbing repair for a leaking kitchen pipe."
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="budget">Budget</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="budget"
+                            id="budget"
+                            placeholder="Example: 150000"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preferred_date">Preferred Date</label>
+                        <input
+                            type="date"
+                            name="preferred_date"
+                            id="preferred_date"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input
+                        type="text"
+                        name="location"
+                        id="location"
+                        placeholder="Example: Ntinda, Kampala"
+                    >
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">Find Providers</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

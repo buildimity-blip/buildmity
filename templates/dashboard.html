@@ -1,830 +1,1017 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#667eea">
-    <title>Buidimty - Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Service Marketplace</title>
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --muted: #64748b;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            --radius: 18px;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #1a1a2e;
-            padding-bottom: 76px;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
         }
 
-        .nav {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            padding: 1rem 1.25rem;
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .dashboard-shell {
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: linear-gradient(135deg, var(--secondary), #1e293b);
+            color: white;
+            padding: 18px 24px;
             position: sticky;
             top: 0;
-            z-index: 1000;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .logo i {
-            background: none;
-            -webkit-text-fill-color: #667eea;
-            font-size: 1.8rem;
-        }
-
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #667eea;
-            padding: 0.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .nav-links a {
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-links a:hover {
-            color: #667eea;
-        }
-
-        .logout-form {
-            margin: 0;
-        }
-
-        .logout-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.65rem 1.1rem;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 1.5rem auto;
-            padding: 0 1rem;
-        }
-
-        .hero {
-            background: white;
-            border-radius: 24px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .hero h2 {
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .role-badge {
-            display: inline-block;
-            padding: 0.35rem 1rem;
-            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #667eea;
-            margin-top: 0.25rem;
-        }
-
-        .hero-icon {
-            font-size: 3rem;
-            color: #667eea;
-        }
-
-        .info-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 1.15rem;
-            border-radius: 16px;
-            margin-top: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .info-box i {
-            font-size: 2rem;
-        }
-
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin: 1.75rem 0 1rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card,
-        .stat-card {
-            background: white;
-            border-radius: 20px;
-            padding: 1.25rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card::before,
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .card:hover,
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.14);
-        }
-
-        .card-icon {
-            font-size: 2.25rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.85rem;
-        }
-
-        .card h3 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: #1a1a2e;
-        }
-
-        .card p {
-            color: #718096;
-            line-height: 1.55;
-            margin-bottom: 0.8rem;
-        }
-
-        .profile-photo {
-            width: 100%;
-            max-width: 180px;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 16px;
-            margin-bottom: 1rem;
-            display: block;
+            z-index: 50;
             box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
 
-        .service-detail {
-            margin: 0.5rem 0;
+        .topbar-inner {
+            max-width: 1350px;
+            margin: 0 auto;
             display: flex;
-            align-items: flex-start;
-            gap: 0.6rem;
-            color: #4a5568;
-            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
-        .service-detail i {
-            color: #667eea;
-            width: 20px;
-            margin-top: 2px;
+        .brand h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
         }
 
-        .service-detail span,
-        .service-detail strong {
-            word-break: break-word;
+        .brand p {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            padding: 0.8rem 1.2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
+            padding: 11px 16px;
             border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
             border: none;
             cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            min-height: 46px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: 0.2s ease;
+            min-height: 44px;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        .btn-primary {
+            background: var(--primary);
+            color: white;
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
-        .btn-secondary:hover {
-            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.3);
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
         }
 
         .btn-outline {
-            background: transparent;
-            border: 2px solid #667eea;
-            color: #667eea;
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--border);
         }
 
         .btn-outline:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #f1f5f9;
+        }
+
+        .btn-sm {
+            padding: 9px 12px;
+            font-size: 0.86rem;
+            border-radius: 10px;
+        }
+
+        .container {
+            max-width: 1350px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #dbeafe, #eff6ff);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .hero-content {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .hero h2 {
+            font-size: 1.7rem;
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            color: #334155;
+            max-width: 700px;
+        }
+
+        .hero-badge {
+            background: white;
+            border: 1px solid #dbeafe;
+            color: var(--primary);
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            white-space: nowrap;
+            text-transform: capitalize;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 24px;
+        }
+
+        .main-grid {
+            grid-template-columns: 2fr 1fr;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .card-subtitle {
+            font-size: 0.92rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card h3 {
+            font-size: 0.95rem;
+            color: var(--muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .stat-note {
+            margin-top: 8px;
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 90px;
+            height: 90px;
+            background: rgba(37, 99, 235, 0.08);
+            border-radius: 50%;
+        }
+
+        .section-stack {
+            display: grid;
+            gap: 20px;
+        }
+
+        .item-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .item {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            background: #fcfdff;
+            transition: 0.2s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        .item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .item-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .item-meta {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        .item-desc {
+            margin-top: 10px;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .item-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
         }
 
         .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: #e2e8f0;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #4a5568;
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: capitalize;
         }
 
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .badge-open,
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
         }
 
-        .stat-label {
-            color: #718096;
-            margin-top: 0.45rem;
+        .badge-matched,
+        .badge-negotiating {
+            background: #dbeafe;
+            color: #1d4ed8;
         }
 
-        .gallery {
+        .badge-accepted,
+        .badge-agreed,
+        .badge-paid,
+        .badge-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-in_progress {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-rejected,
+        .badge-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .quick-links {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 1rem;
+            gap: 12px;
         }
 
-        .gallery-card {
-            background: white;
-            border-radius: 18px;
-            padding: 0.8rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        .gallery-card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
+        .quick-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
             border-radius: 14px;
-            display: block;
-            margin-bottom: 0.7rem;
+            padding: 14px 16px;
+            transition: 0.2s ease;
         }
 
-        .gallery-card h4 {
-            font-size: 0.98rem;
-            margin-bottom: 0.35rem;
-            color: #1a1a2e;
-        }
-
-        .gallery-card p {
-            font-size: 0.87rem;
-            color: #718096;
-            margin: 0;
+        .quick-link:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
         }
 
         .empty-state {
-            background: rgba(255,255,255,0.9);
-            border-radius: 20px;
-            padding: 1.2rem;
-            color: #4a5568;
             text-align: center;
+            padding: 28px 16px;
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+            color: var(--muted);
+            background: #fafcff;
         }
 
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+        .payment-box {
+            border: 1px solid #bbf7d0;
+            background: #f0fdf4;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .payment-box h4 {
+            color: #166534;
+            margin-bottom: 8px;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .work-image-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
             background: white;
-            display: none;
-            justify-content: space-around;
-            padding: 0.45rem;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
         }
 
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            color: #718096;
-            text-decoration: none;
-            font-size: 0.75rem;
-            padding: 0.5rem;
-            transition: color 0.3s ease;
+        .work-image-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            background: #e2e8f0;
         }
 
-        .bottom-nav-item i {
-            font-size: 1.25rem;
+        .work-image-body {
+            padding: 12px;
         }
 
-        .bottom-nav-item.active {
-            color: #667eea;
+        .earnings-card {
+            background: linear-gradient(135deg, #052e16, #166534);
+            color: white;
         }
 
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: block;
+        .earnings-card .card-title,
+        .earnings-card .card-subtitle,
+        .earnings-card .stat-note {
+            color: #dcfce7;
+        }
+
+        .earnings-amount {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-top: 12px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 18px 0;
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
-            .nav-links {
-                display: none;
-                width: 100%;
-                flex-direction: column;
-                gap: 0.9rem;
-                padding-top: 1rem;
-                margin-top: 0.5rem;
-                border-top: 1px solid #e2e8f0;
+            .main-grid {
+                grid-template-columns: 1fr;
             }
+        }
 
-            .nav-links.active {
-                display: flex;
-            }
-
-            .nav-links a,
-            .logout-form,
-            .logout-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
+        @media (max-width: 700px) {
             .container {
-                padding: 0 0.85rem;
-                margin: 1rem auto;
+                padding: 16px;
+            }
+
+            .topbar {
+                padding: 16px;
             }
 
             .hero {
-                padding: 1.2rem;
+                padding: 18px;
             }
 
             .hero h2 {
                 font-size: 1.35rem;
             }
 
-            .grid,
             .stats-grid {
                 grid-template-columns: 1fr;
             }
 
-            .bottom-nav {
-                display: flex;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding-bottom: 84px;
+            .images-grid {
+                grid-template-columns: 1fr;
             }
 
-            .logo {
-                font-size: 1.25rem;
+            .item-top {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
-            .logo i {
-                font-size: 1.45rem;
+            .topbar-inner {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
-            .hero-icon {
-                font-size: 2.2rem;
-            }
-
-            .section-title {
-                font-size: 1.15rem;
-            }
-
-            .btn {
+            .top-actions {
                 width: 100%;
             }
 
-            .profile-photo {
-                max-width: 140px;
-                height: 140px;
-            }
-
-            .gallery-card img {
-                height: 150px;
+            .top-actions .btn {
+                flex: 1;
             }
         }
     </style>
 </head>
 <body>
-    <div class="nav">
-        <div class="logo">
-            <i class="fas fa-hard-hat"></i>
-            Buidimty
-        </div>
+<div class="dashboard-shell">
 
-        <button class="menu-toggle" id="menuToggle" type="button">
-            <i class="fas fa-bars"></i>
-        </button>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <h1>Service Marketplace Dashboard</h1>
+                <p>Welcome back, {{ user.username }}.</p>
+            </div>
 
-        <div class="nav-links" id="navLinks">
-            <a href="/dashboard/">
-                <i class="fas fa-home"></i>
-                Dashboard
-            </a>
-
-            {% if user.is_authenticated %}
+            <div class="top-actions">
                 {% if user.role == 'client' %}
-                    <a href="/providers/search/">
-                        <i class="fas fa-search"></i>
-                        Find Providers
-                    </a>
-                    <a href="/requests/client/">
-                        <i class="fas fa-clipboard-list"></i>
-                        My Requests
-                    </a>
-                {% elif user.role == 'provider' %}
-                    <a href="/requests/provider/">
-                        <i class="fas fa-inbox"></i>
-                        Requests
-                    </a>
-                    <a href="/provider/work/upload/">
-                        <i class="fas fa-upload"></i>
-                        Upload Work
-                    </a>
+                    <a href="{% url 'create_service_need' %}" class="btn btn-primary">Request a Service</a>
                 {% endif %}
-            {% endif %}
 
-            <form action="/logout/" method="post" class="logout-form">
-                {% csrf_token %}
-                <button type="submit" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </button>
-            </form>
+                {% if user.role == 'provider' %}
+                    <a href="{% url 'upload_work_image' %}" class="btn btn-primary">Upload Work Image</a>
+                {% endif %}
+
+                <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <div class="container">
-        <div class="hero">
-            <div class="hero-top">
-                <div>
-                    <h2>
-                        <i class="fas fa-hand-peace"></i>
-                        Welcome back, {{ user.username }}!
-                    </h2>
-                    <span class="role-badge">
-                        <i class="fas fa-user-tag"></i>
-                        {{ user.role|title }}
-                    </span>
-                </div>
-                <i class="fas fa-tools hero-icon"></i>
-            </div>
+    <main class="container">
 
-            {% if role == 'client' %}
-                <div class="info-box">
-                    <i class="fas fa-search"></i>
-                    <div>
-                        <strong>Find the best service providers!</strong><br>
-                        Search by service, check location, view photos of past work, and send requests easily.
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div class="card" style="padding: 14px 16px; border-left: 5px solid var(--primary);">
+                        {{ message }}
                     </div>
-                </div>
-            {% elif role == 'provider' %}
-                <div class="info-box">
-                    <i class="fas fa-chart-line"></i>
-                    <div>
-                        <strong>Grow your business with Buidimty!</strong><br>
-                        Clients can discover your service, see your portfolio, view your location, and contact you directly.
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        {% if role == 'client' %}
-            <div class="section-title">
-                <i class="fas fa-compass"></i>
-                Client Dashboard
-            </div>
-
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <h3>Find Providers</h3>
-                    <p>Search through providers by service type and location, then browse their work samples before contacting them.</p>
-                    <a href="/providers/search/" class="btn">
-                        <i class="fas fa-search"></i>
-                        Search Providers
-                    </a>
-                </div>
-
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <h3>My Requests</h3>
-                    <p>Track the service requests you have sent to providers and follow their status updates.</p>
-                    <a href="/requests/client/" class="btn btn-secondary">
-                        <i class="fas fa-eye"></i>
-                        View My Requests
-                    </a>
-                </div>
-            </div>
-
-        {% elif role == 'provider' %}
-            <div class="section-title">
-                <i class="fas fa-chart-line"></i>
-                Provider Dashboard
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">{{ pending_requests|default:"0" }}</div>
-                    <div class="stat-label">
-                        <i class="fas fa-clock"></i>
-                        Pending Requests
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ total_requests|default:"0" }}</div>
-                    <div class="stat-label">
-                        <i class="fas fa-envelope-open-text"></i>
-                        Total Requests
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ work_images|length|default:"0" }}</div>
-                    <div class="stat-label">
-                        <i class="fas fa-images"></i>
-                        Portfolio Images
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-id-card"></i>
-                    </div>
-                    <h3>My Service Profile</h3>
-
-                    {% if user.profile_photo %}
-                        <img src="{{ user.profile_photo.url }}" alt="Profile photo" class="profile-photo">
-                    {% endif %}
-
-                    <div class="service-detail">
-                        <i class="fas fa-tag"></i>
-                        <span><strong>Service:</strong> {{ user.service_name|default:"Not set" }}</span>
-                    </div>
-
-                    <div class="service-detail">
-                        <i class="fas fa-phone"></i>
-                        <span><strong>Phone:</strong> {{ user.phone_number|default:"Not set" }}</span>
-                    </div>
-
-                    <div class="service-detail">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span><strong>Location:</strong> {{ user.location|default:"Not set" }}</span>
-                    </div>
-
-                    <div class="service-detail">
-                        <i class="fas fa-info-circle"></i>
-                        <span><strong>About:</strong> {{ user.bio|default:"No description yet"|truncatechars:80 }}</span>
-                    </div>
-
-                    <a href="/providers/search/?q={{ user.service_name }}" class="btn btn-outline" style="margin-top: 1rem;">
-                        <i class="fas fa-eye"></i>
-                        Preview Public Profile
-                    </a>
-                </div>
-
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3>Client Requests</h3>
-                    <p>Manage incoming service requests from clients and respond quickly to build your reputation.</p>
-                    <a href="/requests/provider/" class="btn">
-                        <i class="fas fa-inbox"></i>
-                        View Requests
-                        {% if pending_requests > 0 %}
-                            <span class="badge" style="background: #667eea; color: white; margin-left: 0.5rem;">{{ pending_requests }} new</span>
-                        {% endif %}
-                    </a>
-                </div>
-
-                <div class="card">
-                    <div class="card-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <h3>Upload Work Images</h3>
-                    <p>Add photos of your work so clients can trust your service and see the quality you offer.</p>
-                    <a href="/provider/work/upload/" class="btn btn-secondary">
-                        <i class="fas fa-upload"></i>
-                        Upload Images
-                    </a>
-                </div>
-            </div>
-
-            <div class="section-title" style="margin-top: 2rem;">
-                <i class="fas fa-images"></i>
-                My Work Gallery
-            </div>
-
-            {% if recent_work %}
-                <div class="gallery">
-                    {% for work in recent_work %}
-                        <div class="gallery-card">
-                            {% if work.image %}
-                                <img src="{{ work.image.url }}" alt="{{ work.caption|default:'Work image' }}">
-                            {% endif %}
-                            <h4>{{ work.caption|default:"Work Sample" }}</h4>
-                            <p>Uploaded: {{ work.uploaded_at|date:"M d, Y" }}</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    You have not uploaded any work images yet.
-                </div>
-            {% endif %}
-
-        {% else %}
-            <div class="hero">
-                <div class="info-box">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div>
-                        <strong>Role Not Detected</strong><br>
-                        Please contact support to set up your account properly.
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         {% endif %}
-    </div>
-
-    <div class="bottom-nav">
-        <a href="/dashboard/" class="bottom-nav-item active">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
 
         {% if user.role == 'client' %}
-            <a href="/providers/search/" class="bottom-nav-item">
-                <i class="fas fa-search"></i>
-                <span>Search</span>
-            </a>
-            <a href="/requests/client/" class="bottom-nav-item">
-                <i class="fas fa-clipboard-list"></i>
-                <span>Requests</span>
-            </a>
+            <section class="hero">
+                <div class="hero-content">
+                    <div>
+                        <h2>Client Dashboard</h2>
+                        <p>Create service needs, review providers, negotiate pricing, and complete payments from one place.</p>
+                    </div>
+                    <div class="hero-badge">Role: Client</div>
+                </div>
+            </section>
+
+            <section class="grid stats-grid">
+                <div class="card stat-card">
+                    <h3>Total Requests</h3>
+                    <div class="stat-value">{{ total_requests|default:0 }}</div>
+                    <div class="stat-note">All service requests you have created</div>
+                </div>
+
+                <div class="card stat-card">
+                    <h3>Pending</h3>
+                    <div class="stat-value">{{ pending_requests|default:0 }}</div>
+                    <div class="stat-note">Waiting for provider response</div>
+                </div>
+
+                <div class="card stat-card">
+                    <h3>Accepted</h3>
+                    <div class="stat-value">{{ accepted_requests|default:0 }}</div>
+                    <div class="stat-note">Ready for payment or work start</div>
+                </div>
+
+                <div class="card stat-card">
+                    <h3>Negotiating / Completed</h3>
+                    <div class="stat-value">{{ negotiating_requests|default:0 }}/{{ completed_requests|default:0 }}</div>
+                    <div class="stat-note">Active discussions and finished jobs</div>
+                </div>
+            </section>
+
+            <section class="grid main-grid">
+                <div class="section-stack">
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Recent Service Needs</div>
+                                <div class="card-subtitle">Your latest requested services</div>
+                            </div>
+                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">New Need</a>
+                        </div>
+
+                        {% if needs %}
+                            <div class="item-list">
+                                {% for need in needs %}
+                                    <div class="item">
+                                        <div class="item-top">
+                                            <div>
+                                                <div class="item-title">
+                                                    {% if need.service %}
+                                                        {{ need.service.name }}
+                                                    {% elif need.custom_service_name %}
+                                                        {{ need.custom_service_name }}
+                                                    {% else %}
+                                                        Service Need
+                                                    {% endif %}
+                                                </div>
+                                                <div class="item-meta">
+                                                    {% if need.location %}
+                                                        {{ need.location }}
+                                                    {% endif %}
+                                                    {% if need.created_at %}
+                                                        {% if need.location %} • {% endif %}Created: {{ need.created_at|date:"M d, Y" }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            {% if need.status %}
+                                                <span class="badge badge-{{ need.status|slugify }}">{{ need.status }}</span>
+                                            {% else %}
+                                                <span class="badge badge-open">Open</span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if need.description %}
+                                            <div class="item-desc">{{ need.description }}</div>
+                                        {% endif %}
+
+                                        <div class="item-actions">
+                                            {% if need.id %}
+                                                <a href="{% url 'match_providers' need.id %}" class="btn btn-outline btn-sm">View Matches</a>
+                                            {% endif %}
+                                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">Request Similar Service</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <p>You have not created any service needs yet.</p>
+                                <div style="margin-top: 14px;">
+                                    <a href="{% url 'create_service_need' %}" class="btn btn-primary">Create Your First Service Need</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Recent Requests & Negotiations</div>
+                                <div class="card-subtitle">Track provider responses and ongoing discussions</div>
+                            </div>
+                        </div>
+
+                        {% if requests %}
+                            <div class="item-list">
+                                {% for request in requests %}
+                                    <div class="item">
+                                        <div class="item-top">
+                                            <div>
+                                                <div class="item-title">
+                                                    {% if request.service_need and request.service_need.service %}
+                                                        {{ request.service_need.service.name }}
+                                                    {% elif request.service_need and request.service_need.custom_service_name %}
+                                                        {{ request.service_need.custom_service_name }}
+                                                    {% elif request.service %}
+                                                        {{ request.service.name }}
+                                                    {% else %}
+                                                        Service Request
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="item-meta">
+                                                    {% if request.provider %}
+                                                        Provider: {{ request.provider.username }}
+                                                    {% endif %}
+                                                    {% if request.created_at %}
+                                                        {% if request.provider %} • {% endif %}{{ request.created_at|date:"M d, Y - H:i" }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            {% if request.status %}
+                                                <span class="badge badge-{{ request.status|slugify }}">{{ request.status }}</span>
+                                            {% else %}
+                                                <span class="badge badge-pending">Pending</span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if request.message %}
+                                            <div class="item-desc">{{ request.message }}</div>
+                                        {% endif %}
+
+                                        <div class="item-actions">
+                                            <a href="{% url 'service_request_detail' request.id %}" class="btn btn-outline btn-sm">Open</a>
+                                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-primary btn-sm">Negotiate</a>
+
+                                            {% if request.status == 'paid' %}
+                                                <a href="{% url 'release_payment' request.id %}" class="btn btn-success btn-sm">Release Payment</a>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if request.status == 'accepted' or request.status == 'agreed' %}
+                                            <div class="payment-box">
+                                                <h4>Payment Ready</h4>
+                                                <p style="margin-bottom: 12px;">
+                                                    This request is ready for payment. Continue with MTN Mobile Money or Airtel Money.
+                                                </p>
+                                                <div class="item-actions">
+                                                    <a href="{% url 'make_payment' request.id %}" class="btn btn-success btn-sm">Pay Now</a>
+                                                    <a href="#" class="btn btn-outline btn-sm">MTN Mobile Money</a>
+                                                    <a href="#" class="btn btn-outline btn-sm">Airtel Money</a>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <p>No requests or negotiations yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section-stack">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Quick Actions</div>
+                                <div class="card-subtitle">Common things you can do</div>
+                            </div>
+                        </div>
+
+                        <div class="quick-links">
+                            <a href="{% url 'create_service_need' %}" class="quick-link">
+                                <span>Request a New Service</span>
+                                <strong>→</strong>
+                            </a>
+
+                            <a href="{% url 'client_requests' %}" class="quick-link">
+                                <span>View My Requests</span>
+                                <strong>→</strong>
+                            </a>
+
+                            <a href="{% url 'search_providers' %}" class="quick-link">
+                                <span>Find Providers</span>
+                                <strong>→</strong>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Available Services</div>
+                                <div class="card-subtitle">Choose from listed services</div>
+                            </div>
+                        </div>
+
+                        {% if services %}
+                            <div class="item-list">
+                                {% for service in services %}
+                                    <div class="item">
+                                        <div class="item-title">{{ service.name }}</div>
+                                        {% if service.description %}
+                                            <div class="item-desc">{{ service.description|truncatechars:100 }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <p>No services available right now.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
         {% elif user.role == 'provider' %}
-            <a href="/requests/provider/" class="bottom-nav-item">
-                <i class="fas fa-inbox"></i>
-                <span>Requests</span>
-            </a>
-            <a href="/provider/work/upload/" class="bottom-nav-item">
-                <i class="fas fa-camera"></i>
-                <span>Upload</span>
-            </a>
+            <section class="hero">
+                <div class="hero-content">
+                    <div>
+                        <h2>Provider Dashboard</h2>
+                        <p>Manage incoming requests, negotiate pricing, update job progress, and showcase your recent work.</p>
+                    </div>
+                    <div class="hero-badge">Role: Provider</div>
+                </div>
+            </section>
+
+            <section class="grid stats-grid">
+                <div class="card stat-card">
+                    <h3>Total Requests</h3>
+                    <div class="stat-value">{{ total_requests|default:0 }}</div>
+                    <div class="stat-note">All client requests assigned to you</div>
+                </div>
+
+                <div class="card stat-card">
+                    <h3>Pending</h3>
+                    <div class="stat-value">{{ pending_requests|default:0 }}</div>
+                    <div class="stat-note">New requests awaiting action</div>
+                </div>
+
+                <div class="card stat-card">
+                    <h3>Accepted / Negotiating</h3>
+                    <div class="stat-value">{{ accepted_requests|default:0 }}/{{ negotiating_requests|default:0 }}</div>
+                    <div class="stat-note">Accepted jobs and active negotiations</div>
+                </div>
+
+                <div class="card stat-card">
+                    <h3>Completed</h3>
+                    <div class="stat-value">{{ completed_requests|default:0 }}</div>
+                    <div class="stat-note">Successfully finished jobs</div>
+                </div>
+            </section>
+
+            <section class="grid main-grid">
+                <div class="section-stack">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Incoming Requests</div>
+                                <div class="card-subtitle">Review and manage client service requests</div>
+                            </div>
+                        </div>
+
+                        {% if requests %}
+                            <div class="item-list">
+                                {% for request in requests %}
+                                    <div class="item">
+                                        <div class="item-top">
+                                            <div>
+                                                <div class="item-title">
+                                                    {% if request.service_need and request.service_need.service %}
+                                                        {{ request.service_need.service.name }}
+                                                    {% elif request.service_need and request.service_need.custom_service_name %}
+                                                        {{ request.service_need.custom_service_name }}
+                                                    {% elif request.service %}
+                                                        {{ request.service.name }}
+                                                    {% else %}
+                                                        Client Request
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="item-meta">
+                                                    {% if request.client %}
+                                                        Client: {{ request.client.username }}
+                                                    {% endif %}
+                                                    {% if request.created_at %}
+                                                        {% if request.client %} • {% endif %}{{ request.created_at|date:"M d, Y - H:i" }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            {% if request.status %}
+                                                <span class="badge badge-{{ request.status|slugify }}">{{ request.status }}</span>
+                                            {% else %}
+                                                <span class="badge badge-pending">Pending</span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if request.message %}
+                                            <div class="item-desc">{{ request.message }}</div>
+                                        {% endif %}
+
+                                        <div class="item-actions">
+                                            <a href="{% url 'service_request_detail' request.id %}" class="btn btn-outline btn-sm">View</a>
+
+                                            {% if request.status == 'pending' %}
+                                                <a href="{% url 'update_request_status' request.id 'accepted' %}" class="btn btn-success btn-sm">Accept</a>
+                                                <a href="{% url 'update_request_status' request.id 'rejected' %}" class="btn btn-danger btn-sm">Reject</a>
+                                            {% endif %}
+
+                                            {% if request.status == 'accepted' or request.status == 'paid' %}
+                                                <a href="{% url 'update_request_status' request.id 'in_progress' %}" class="btn btn-warning btn-sm">Mark In Progress</a>
+                                            {% endif %}
+
+                                            {% if request.status == 'in_progress' or request.status == 'negotiating' %}
+                                                <a href="{% url 'update_request_status' request.id 'completed' %}" class="btn btn-success btn-sm">Mark Complete</a>
+                                            {% endif %}
+
+                                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-primary btn-sm">Negotiate</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <p>No incoming requests yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Work Gallery</div>
+                                <div class="card-subtitle">Showcase your recent work</div>
+                            </div>
+                            <a href="{% url 'upload_work_image' %}" class="btn btn-primary btn-sm">Upload</a>
+                        </div>
+
+                        {% if work_images %}
+                            <div class="images-grid">
+                                {% for image in work_images %}
+                                    <div class="work-image-card">
+                                        {% if image.image %}
+                                            <img src="{{ image.image.url }}" alt="Work Image">
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder.jpg' %}" alt="Placeholder">
+                                        {% endif %}
+                                        <div class="work-image-body">
+                                            <strong>{{ image.caption|default:"Project Image" }}</strong>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <p>No work images uploaded yet.</p>
+                                <div style="margin-top: 14px;">
+                                    <a href="{% url 'upload_work_image' %}" class="btn btn-primary">Upload First Image</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section-stack">
+                    <div class="card earnings-card">
+                        <div class="card-title">Total Earnings</div>
+                        <div class="card-subtitle">From completed work</div>
+                        <div class="earnings-amount">UGX {{ total_earnings|default:0 }}</div>
+                        <div class="stat-note">Keep delivering quality work to grow your revenue.</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Quick Actions</div>
+                                <div class="card-subtitle">Shortcuts for daily provider tasks</div>
+                            </div>
+                        </div>
+
+                        <div class="quick-links">
+                            <a href="{% url 'upload_work_image' %}" class="quick-link">
+                                <span>Upload Work Image</span>
+                                <strong>→</strong>
+                            </a>
+
+                            <a href="{% url 'provider_requests' %}" class="quick-link">
+                                <span>View All Requests</span>
+                                <strong>→</strong>
+                            </a>
+
+                            <a href="{% url 'provider_profile' %}" class="quick-link">
+                                <span>Update Profile</span>
+                                <strong>→</strong>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        {% elif user.role == 'admin' %}
+            <section class="hero">
+                <div class="hero-content">
+                    <div>
+                        <h2>Admin Dashboard</h2>
+                        <p>Monitor users, providers, service needs, requests, searches, notifications, and payments.</p>
+                    </div>
+                    <div class="hero-badge">Role: Admin</div>
+                </div>
+            </section>
+
+            <div class="card">
+                <div class="card-title">Admin Area</div>
+                <div class="card-subtitle" style="margin-top: 6px;">
+                    Use the admin dashboard to verify providers, review platform activity, and manage users.
+                </div>
+                <div class="divider"></div>
+                <div class="quick-links">
+                    <a href="{% url 'admin_dashboard' %}" class="quick-link">
+                        <span>Open Admin Dashboard</span>
+                        <strong>→</strong>
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="empty-state">
+                    <p>No dashboard is available for this account.</p>
+                </div>
+            </div>
         {% endif %}
-    </div>
+    </main>
+</div>
 
-    <script>
-        const menuToggle = document.getElementById('menuToggle');
-        const navLinks = document.getElementById('navLinks');
-
-        if (menuToggle && navLinks) {
-            menuToggle.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-                const icon = menuToggle.querySelector('i');
-                if (navLinks.classList.contains('active')) {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-times');
-                } else {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const buttons = document.querySelectorAll(".btn");
+        buttons.forEach(button => {
+            button.addEventListener("click", function () {
+                this.style.transform = "scale(0.98)";
+                setTimeout(() => {
+                    this.style.transform = "";
+                }, 120);
             });
-        }
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768 && navLinks) {
-                navLinks.classList.remove('active');
-                if (menuToggle) {
-                    const icon = menuToggle.querySelector('i');
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
-            }
         });
-
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.bottom-nav-item').forEach(item => {
-            if (item.getAttribute('href') === currentPath) {
-                item.classList.add('active');
-            }
-        });
-    </script>
+    });
+</script>
 </body>
 </html>

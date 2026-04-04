@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Negotiation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 14px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 22px;
+        }
+
+        .provider-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e5e7eb;
+        }
+
+        .avatar-placeholder {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: #1d4ed8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .provider-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            margin-bottom: 16px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .bio {
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .info-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .info-row {
+            margin-bottom: 10px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .help {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .note {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <h1>Start Negotiation</h1>
+                <p class="subtitle">
+                    Send your first message and your proposed price to the provider.
+                </p>
+
+                <div class="note">
+                    This starts the negotiation. After the provider agrees, the next step will be payment through MTN Mobile Money or Airtel Money.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="message">Message to Provider</label>
+                        <textarea
+                            name="message"
+                            id="message"
+                            placeholder="Explain the work clearly. Example: I need a plumber to fix a leaking pipe at my home in Ntinda."
+                            required
+                        >{% if need %}Hello {{ provider.username }}, I need help with {{ need.service.name|default:need.custom_service_name }}. {{ need.description }}{% endif %}</textarea>
+                        <div class="help">
+                            Include what you need done, your location, and any urgency.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Your Proposed Price</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            name="amount"
+                            id="amount"
+                            placeholder="Example: 150000"
+                            value="{% if need and need.budget %}{{ need.budget }}{% endif %}"
+                        >
+                        <div class="help">
+                            Enter the amount you want to negotiate with the provider.
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">Send Negotiation Request</button>
+
+                        {% if need %}
+                            <a href="{% url 'match_providers' need.id %}" class="btn btn-secondary">Back to Providers</a>
+                        {% else %}
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Provider Details</h2>
+
+                <div class="provider-top">
+                    {% if provider.profile_photo %}
+                        <img src="{{ provider.profile_photo.url }}" alt="{{ provider.username }}" class="avatar">
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            {{ provider.username|first|upper }}
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <div class="provider-name">{{ provider.username }}</div>
+                        <div class="muted">
+                            {% if provider.service %}{{ provider.service.name }}{% endif %}
+                            {% if provider.location %} • {{ provider.location }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="badges">
+                    {% if provider.is_verified %}
+                        <span class="badge badge-success">Verified Provider</span>
+                    {% endif %}
+                    {% if provider.service %}
+                        <span class="badge badge-info">{{ provider.service.name }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="bio">
+                    {% if provider.bio %}
+                        {{ provider.bio }}
+                    {% else %}
+                        This provider has not added a profile description yet.
+                    {% endif %}
+                </div>
+
+                <div class="info-box">
+                    {% if need %}
+                        <div class="info-row">
+                            <strong>Your service request:</strong>
+                            {% if need.service %}
+                                {{ need.service.name }}
+                            {% else %}
+                                {{ need.custom_service_name }}
+                            {% endif %}
+                        </div>
+
+                        <div class="info-row">
+                            <strong>Description:</strong>
+                            {{ need.description }}
+                        </div>
+
+                        {% if need.location %}
+                            <div class="info-row">
+                                <strong>Location:</strong>
+                                {{ need.location }}
+                            </div>
+                        {% endif %}
+
+                        {% if need.budget %}
+                            <div class="info-row">
+                                <strong>Your budget:</strong>
+                                {{ need.budget }}
+                            </div>
+                        {% endif %}
+
+                        {% if need.preferred_date %}
+                            <div class="info-row">
+                                <strong>Preferred date:</strong>
+                                {{ need.preferred_date }}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="info-row">
+                            <strong>Service:</strong>
+                            {% if provider.service %}
+                                {{ provider.service.name }}
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </div>
+
+                        {% if provider.location %}
+                            <div class="info-row">
+                                <strong>Location:</strong>
+                                {{ provider.location }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="actions">
+                    <a href="{% url 'provider_detail' provider.id %}" class="btn btn-secondary">View Full Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

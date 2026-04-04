@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matched Providers | Service Marketplace</title>
+    <style>
+        :root{
+            --primary:#2563eb;
+            --primary-dark:#1d4ed8;
+            --secondary:#0f172a;
+            --success:#16a34a;
+            --bg:#f8fafc;
+            --card:#ffffff;
+            --muted:#64748b;
+            --text:#0f172a;
+            --border:#e2e8f0;
+            --shadow:0 10px 25px rgba(15,23,42,0.08);
+            --radius:18px;
+        }
+
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
+
+        body{
+            font-family:Arial, Helvetica, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            line-height:1.5;
+            padding:24px;
+        }
+
+        a{
+            text-decoration:none;
+            color:inherit;
+        }
+
+        .page{
+            max-width:1200px;
+            margin:0 auto;
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            flex-wrap:wrap;
+            margin-bottom:24px;
+        }
+
+        .title-wrap h1{
+            font-size:1.9rem;
+            margin-bottom:6px;
+            color:var(--secondary);
+        }
+
+        .title-wrap p{
+            color:var(--muted);
+        }
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:11px 16px;
+            border-radius:12px;
+            border:none;
+            cursor:pointer;
+            font-size:0.95rem;
+            font-weight:600;
+            transition:0.2s ease;
+            min-height:44px;
+        }
+
+        .btn-primary{
+            background:var(--primary);
+            color:#fff;
+        }
+
+        .btn-primary:hover{
+            background:var(--primary-dark);
+        }
+
+        .btn-outline{
+            background:#fff;
+            color:var(--secondary);
+            border:1px solid var(--border);
+        }
+
+        .btn-outline:hover{
+            background:#f1f5f9;
+        }
+
+        .hero,
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+        }
+
+        .hero{
+            padding:22px;
+            margin-bottom:24px;
+        }
+
+        .hero h2{
+            font-size:1.2rem;
+            margin-bottom:10px;
+        }
+
+        .hero p{
+            color:#475569;
+        }
+
+        .need-grid{
+            display:grid;
+            grid-template-columns:1.2fr 0.8fr;
+            gap:20px;
+            margin-top:18px;
+        }
+
+        .need-box{
+            background:#f8fafc;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:16px;
+        }
+
+        .need-box strong{
+            display:block;
+            font-size:0.9rem;
+            color:var(--muted);
+            margin-bottom:6px;
+        }
+
+        .providers-grid{
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+            gap:20px;
+        }
+
+        .card{
+            padding:20px;
+        }
+
+        .provider-top{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            margin-bottom:14px;
+        }
+
+        .avatar{
+            width:72px;
+            height:72px;
+            border-radius:50%;
+            overflow:hidden;
+            background:#dbeafe;
+            flex-shrink:0;
+        }
+
+        .avatar img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+
+        .avatar-placeholder{
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:800;
+            font-size:1.4rem;
+            color:var(--primary);
+        }
+
+        .provider-name{
+            font-size:1.1rem;
+            font-weight:800;
+            color:var(--secondary);
+        }
+
+        .meta{
+            color:var(--muted);
+            font-size:0.92rem;
+            margin-top:4px;
+        }
+
+        .badges{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin:12px 0;
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            padding:7px 12px;
+            border-radius:999px;
+            font-size:0.82rem;
+            font-weight:700;
+        }
+
+        .badge-verified{
+            background:#dcfce7;
+            color:#166534;
+        }
+
+        .badge-service{
+            background:#dbeafe;
+            color:#1d4ed8;
+        }
+
+        .bio{
+            color:#334155;
+            margin-top:10px;
+            margin-bottom:14px;
+            min-height:48px;
+        }
+
+        .info-box{
+            background:#f8fafc;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:14px;
+            margin-bottom:14px;
+        }
+
+        .info-row{
+            margin-bottom:8px;
+            color:#334155;
+        }
+
+        .info-row:last-child{
+            margin-bottom:0;
+        }
+
+        .actions{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:14px;
+        }
+
+        .empty{
+            text-align:center;
+            padding:34px 18px;
+            border:1px dashed var(--border);
+            border-radius:16px;
+            background:#fafcff;
+            color:var(--muted);
+        }
+
+        @media (max-width: 960px){
+            .need-grid,
+            .providers-grid{
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media (max-width: 700px){
+            body{
+                padding:16px;
+            }
+
+            .topbar{
+                align-items:flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <div class="topbar">
+            <div class="title-wrap">
+                <h1>Matched Providers</h1>
+                <p>Choose a provider for your service need and send a request.</p>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a href="{% url 'create_service_need' %}" class="btn btn-outline">New Service Need</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="hero">
+            <h2>Your Service Need</h2>
+
+            <div class="need-grid">
+                <div class="need-box">
+                    <strong>Requested Service</strong>
+                    <div>
+                        {% if need.service %}
+                            {{ need.service.name }}
+                        {% elif need.custom_service_name %}
+                            {{ need.custom_service_name }}
+                        {% else %}
+                            Service Need
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="need-box">
+                    <strong>Status</strong>
+                    <div>{{ need.status|title }}</div>
+                </div>
+
+                <div class="need-box">
+                    <strong>Description</strong>
+                    <div>{{ need.description|default:"No description added." }}</div>
+                </div>
+
+                <div class="need-box">
+                    <strong>Details</strong>
+                    <div>
+                        {% if need.location %}<div>Location: {{ need.location }}</div>{% endif %}
+                        {% if need.budget %}<div>Budget: UGX {{ need.budget }}</div>{% endif %}
+                        {% if need.preferred_date %}<div>Preferred date: {{ need.preferred_date }}</div>{% endif %}
+                        <div>Created: {{ need.created_at|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if providers %}
+            <div class="providers-grid">
+                {% for provider in providers %}
+                    <div class="card">
+                        <div class="provider-top">
+                            <div class="avatar">
+                                {% if provider.profile_photo %}
+                                    <img src="{{ provider.profile_photo.url }}" alt="{{ provider.username }}">
+                                {% else %}
+                                    <div class="avatar-placeholder">
+                                        {{ provider.username|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <div class="provider-name">{{ provider.username }}</div>
+                                <div class="meta">
+                                    {% if provider.location %}{{ provider.location }}{% else %}Location not added{% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="badges">
+                            {% if provider.is_verified %}
+                                <span class="badge badge-verified">Verified Provider</span>
+                            {% endif %}
+                            {% if provider.service %}
+                                <span class="badge badge-service">{{ provider.service.name }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="bio">
+                            {% if provider.bio %}
+                                {{ provider.bio|truncatechars:180 }}
+                            {% else %}
+                                This provider has not added a profile description yet.
+                            {% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            {% if provider.phone_number %}
+                                <div class="info-row"><strong>Phone:</strong> {{ provider.phone_number }}</div>
+                            {% endif %}
+                            {% if provider.service %}
+                                <div class="info-row"><strong>Service:</strong> {{ provider.service.name }}</div>
+                            {% endif %}
+                            {% if provider.location %}
+                                <div class="info-row"><strong>Location:</strong> {{ provider.location }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="actions">
+                            <a href="{% url 'provider_detail' provider.id %}" class="btn btn-outline">View Profile</a>
+                            <a href="{% url 'request_service_with_need' provider.id need.id %}" class="btn btn-primary">Request Service</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">
+                <p>No matching providers found yet for this service need.</p>
+                <div style="margin-top:14px;">
+                    <a href="{% url 'search_providers' %}" class="btn btn-primary">Search Providers Manually</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

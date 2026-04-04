@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin User Detail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 20px;
+        }
+        .card, .section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 8px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .approve { background: #d1fae5; color: #065f46; }
+        .ignore { background: #fef3c7; color: #92400e; }
+        .suspend { background: #fee2e2; color: #991b1b; }
+        .back { background: #dbeafe; color: #1e40af; }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+            gap: 16px;
+        }
+        .gallery img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>{{ user_obj.username }}</h1>
+        <p><strong>Email:</strong> {{ user_obj.email }}</p>
+        <p><strong>Role:</strong> {{ user_obj.role }}</p>
+        <p><strong>Phone:</strong> {{ user_obj.phone_number }}</p>
+        <p><strong>Location:</strong> {{ user_obj.location }}</p>
+        <p><strong>Service:</strong> {{ user_obj.service }}</p>
+        <p><strong>Verified:</strong> {{ user_obj.is_verified }}</p>
+        <p><strong>Suspended:</strong> {{ user_obj.is_suspended }}</p>
+        <p><strong>Bio:</strong> {{ user_obj.bio }}</p>
+
+        <div style="margin-top:15px;">
+            <a href="{% url 'admin_dashboard' %}" class="btn back">Back</a>
+            {% if user_obj.role == 'provider' %}
+                <a href="{% url 'approve_provider' user_obj.id %}" class="btn approve">Approve</a>
+                <a href="{% url 'ignore_provider' user_obj.id %}" class="btn ignore">Ignore</a>
+            {% endif %}
+            <a href="{% url 'suspend_user' user_obj.id %}" class="btn suspend">Suspend</a>
+        </div>
+    </div>
+
+    {% if user_obj.role == 'provider' %}
+    <div class="section">
+        <h2>Work Images</h2>
+        <div class="gallery">
+            {% for image in work_images %}
+                <div>
+                    <img src="{{ image.image.url }}" alt="">
+                    <p>{{ image.caption }}</p>
+                </div>
+            {% empty %}
+                <p>No images uploaded.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <h2>Requests Sent</h2>
+        {% for req in requests_sent %}
+            <div class="item">#{{ req.id }} — {{ req.service }} — {{ req.status }} — {{ req.created_at }}</div>
+        {% empty %}
+            <p>No sent requests.</p>
+        {% endfor %}
+    </div>
+
+    <div class="section">
+        <h2>Requests Received</h2>
+        {% for req in requests_received %}
+            <div class="item">#{{ req.id }} — {{ req.service }} — {{ req.status }} — {{ req.created_at }}</div>
+        {% empty %}
+            <p>No received requests.</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

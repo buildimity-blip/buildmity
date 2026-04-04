@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Profile | Service Marketplace</title>
+    <style>
+        :root{
+            --primary:#2563eb;
+            --primary-dark:#1d4ed8;
+            --secondary:#0f172a;
+            --success:#16a34a;
+            --bg:#f8fafc;
+            --card:#ffffff;
+            --muted:#64748b;
+            --text:#0f172a;
+            --border:#e2e8f0;
+            --shadow:0 10px 25px rgba(15,23,42,0.08);
+            --radius:18px;
+        }
+
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
+
+        body{
+            font-family:Arial, Helvetica, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            line-height:1.5;
+            padding:24px;
+        }
+
+        a{
+            text-decoration:none;
+        }
+
+        .page{
+            max-width:1100px;
+            margin:0 auto;
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            margin-bottom:24px;
+            flex-wrap:wrap;
+        }
+
+        .title-wrap h1{
+            font-size:2rem;
+            color:var(--secondary);
+            margin-bottom:6px;
+        }
+
+        .title-wrap p{
+            color:var(--muted);
+            font-size:0.98rem;
+        }
+
+        .top-actions{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:12px 18px;
+            border-radius:12px;
+            border:none;
+            font-weight:600;
+            font-size:0.95rem;
+            cursor:pointer;
+            transition:0.2s ease;
+            min-height:44px;
+        }
+
+        .btn-primary{
+            background:var(--primary);
+            color:#fff;
+        }
+
+        .btn-primary:hover{
+            background:var(--primary-dark);
+        }
+
+        .btn-outline{
+            background:#fff;
+            color:var(--secondary);
+            border:1px solid var(--border);
+        }
+
+        .btn-outline:hover{
+            background:#f1f5f9;
+        }
+
+        .hero-card,
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+        }
+
+        .hero-card{
+            padding:24px;
+            margin-bottom:24px;
+        }
+
+        .hero-inner{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:20px;
+            flex-wrap:wrap;
+        }
+
+        .hero-left{
+            display:flex;
+            align-items:center;
+            gap:18px;
+            flex-wrap:wrap;
+        }
+
+        .avatar{
+            width:96px;
+            height:96px;
+            border-radius:50%;
+            overflow:hidden;
+            background:#dbeafe;
+            border:4px solid #eff6ff;
+            flex-shrink:0;
+        }
+
+        .avatar img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+
+        .avatar-placeholder{
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:2rem;
+            font-weight:700;
+            color:var(--primary);
+            background:#dbeafe;
+        }
+
+        .hero-text h2{
+            font-size:1.4rem;
+            margin-bottom:6px;
+            color:var(--secondary);
+        }
+
+        .hero-text p{
+            color:var(--muted);
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            padding:8px 14px;
+            border-radius:999px;
+            font-size:0.85rem;
+            font-weight:700;
+        }
+
+        .badge-verified{
+            background:#dcfce7;
+            color:#166534;
+        }
+
+        .badge-pending{
+            background:#fef3c7;
+            color:#92400e;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:1.4fr 0.9fr;
+            gap:24px;
+        }
+
+        .card{
+            padding:24px;
+        }
+
+        .card h3{
+            font-size:1.15rem;
+            margin-bottom:6px;
+            color:var(--secondary);
+        }
+
+        .card-subtitle{
+            color:var(--muted);
+            font-size:0.95rem;
+            margin-bottom:20px;
+        }
+
+        .form-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+        }
+
+        .form-group{
+            display:flex;
+            flex-direction:column;
+        }
+
+        .form-group.full{
+            grid-column:1 / -1;
+        }
+
+        label{
+            font-size:0.92rem;
+            font-weight:600;
+            margin-bottom:8px;
+            color:#334155;
+        }
+
+        input,
+        textarea,
+        select{
+            width:100%;
+            padding:12px 14px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            background:#fff;
+            color:var(--text);
+            font-size:0.95rem;
+            outline:none;
+            transition:border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus{
+            border-color:#93c5fd;
+            box-shadow:0 0 0 3px rgba(37,99,235,0.12);
+        }
+
+        textarea{
+            resize:vertical;
+            min-height:130px;
+        }
+
+        .hint{
+            margin-top:6px;
+            font-size:0.84rem;
+            color:var(--muted);
+        }
+
+        .form-actions{
+            margin-top:20px;
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .stats{
+            display:grid;
+            gap:14px;
+            margin-bottom:20px;
+        }
+
+        .stat-box{
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:16px;
+            background:#fcfdff;
+        }
+
+        .stat-box h4{
+            font-size:0.92rem;
+            color:var(--muted);
+            margin-bottom:8px;
+        }
+
+        .stat-value{
+            font-size:1.45rem;
+            font-weight:800;
+            color:var(--secondary);
+        }
+
+        .profile-list{
+            display:grid;
+            gap:12px;
+        }
+
+        .profile-item{
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:14px 16px;
+            background:#fcfdff;
+        }
+
+        .profile-item strong{
+            display:block;
+            font-size:0.9rem;
+            color:var(--muted);
+            margin-bottom:6px;
+        }
+
+        .work-section{
+            margin-top:24px;
+        }
+
+        .images-grid{
+            display:grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap:16px;
+            margin-top:16px;
+        }
+
+        .work-card{
+            border:1px solid var(--border);
+            border-radius:16px;
+            overflow:hidden;
+            background:#fff;
+            box-shadow:0 6px 18px rgba(15,23,42,0.04);
+        }
+
+        .work-card img{
+            width:100%;
+            height:190px;
+            object-fit:cover;
+            display:block;
+            background:#e2e8f0;
+        }
+
+        .work-body{
+            padding:12px;
+        }
+
+        .work-body p{
+            font-size:0.9rem;
+            color:#475569;
+        }
+
+        .empty-state{
+            margin-top:14px;
+            padding:26px 16px;
+            border:1px dashed var(--border);
+            border-radius:16px;
+            text-align:center;
+            color:var(--muted);
+            background:#fafcff;
+        }
+
+        @media (max-width: 980px){
+            .grid{
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media (max-width: 720px){
+            body{
+                padding:16px;
+            }
+
+            .topbar{
+                align-items:flex-start;
+            }
+
+            .form-grid,
+            .images-grid{
+                grid-template-columns:1fr;
+            }
+
+            .hero-card,
+            .card{
+                padding:18px;
+            }
+
+            .title-wrap h1{
+                font-size:1.6rem;
+            }
+
+            .hero-text h2{
+                font-size:1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <div class="topbar">
+            <div class="title-wrap">
+                <h1>Provider Profile</h1>
+                <p>Update your professional details, payment setup, and showcase your recent work.</p>
+            </div>
+
+            <div class="top-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+                <a href="{% url 'upload_work_image' %}" class="btn btn-primary">Upload Work Image</a>
+            </div>
+        </div>
+
+        <div class="hero-card">
+            <div class="hero-inner">
+                <div class="hero-left">
+                    <div class="avatar">
+                        {% if provider.profile_photo %}
+                            <img src="{{ provider.profile_photo.url }}" alt="{{ provider.username }}">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                {{ provider.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="hero-text">
+                        <h2>{{ provider.first_name|default:provider.username }} {{ provider.last_name }}</h2>
+                        <p>@{{ provider.username }}</p>
+                        <p>
+                            {% if provider.service %}
+                                {{ provider.service.name }}
+                            {% else %}
+                                Service Provider
+                            {% endif %}
+                            {% if provider.location %}
+                                • {{ provider.location }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    {% if provider.is_verified %}
+                        <span class="badge badge-verified">Verified Provider</span>
+                    {% else %}
+                        <span class="badge badge-pending">Verification Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Edit Profile</h3>
+                <p class="card-subtitle">Keep your information accurate so clients can trust and contact you easily.</p>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input id="first_name" type="text" name="first_name" value="{{ provider.first_name }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input id="last_name" type="text" name="last_name" value="{{ provider.last_name }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" name="email" value="{{ provider.email }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone_number">Phone Number</label>
+                            <input id="phone_number" type="text" name="phone_number" value="{{ provider.phone_number }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input id="location" type="text" name="location" value="{{ provider.location }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="profile_photo">Profile Photo</label>
+                            <input id="profile_photo" type="file" name="profile_photo">
+                            <div class="hint">Upload a clear profile image for clients to recognize you.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferred_payment_network">Preferred Payment Network</label>
+                            <select id="preferred_payment_network" name="preferred_payment_network">
+                                <option value="">Select network</option>
+                                <option value="mtn" {% if provider.preferred_payment_network == 'mtn' %}selected{% endif %}>MTN Mobile Money</option>
+                                <option value="airtel" {% if provider.preferred_payment_network == 'airtel' %}selected{% endif %}>Airtel Money</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mobile_money_number">Mobile Money Number</label>
+                            <input id="mobile_money_number" type="text" name="mobile_money_number" value="{{ provider.mobile_money_number }}">
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="bio">Professional Bio</label>
+                            <textarea id="bio" name="bio" rows="6" placeholder="Tell clients about your experience, services, and strengths.">{{ provider.bio }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Profile</button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Profile Summary</h3>
+                <p class="card-subtitle">A quick view of your current provider information.</p>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <h4>Account Balance</h4>
+                        <div class="stat-value">UGX {{ provider.account_balance }}</div>
+                    </div>
+
+                    <div class="stat-box">
+                        <h4>Verification Status</h4>
+                        <div class="stat-value">
+                            {% if provider.is_verified %}Verified{% else %}Pending{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-list">
+                    <div class="profile-item">
+                        <strong>Service</strong>
+                        <span>{% if provider.service %}{{ provider.service.name }}{% else %}Not selected{% endif %}</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Phone</strong>
+                        <span>{{ provider.phone_number|default:"Not added" }}</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Location</strong>
+                        <span>{{ provider.location|default:"Not added" }}</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Preferred Network</strong>
+                        <span>
+                            {% if provider.preferred_payment_network == 'mtn' %}
+                                MTN Mobile Money
+                            {% elif provider.preferred_payment_network == 'airtel' %}
+                                Airtel Money
+                            {% else %}
+                                Not selected
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Mobile Money Number</strong>
+                        <span>{{ provider.mobile_money_number|default:"Not added" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card work-section">
+            <h3>Recent Work</h3>
+            <p class="card-subtitle">Show clients examples of what you have done recently.</p>
+
+            {% if work_images %}
+                <div class="images-grid">
+                    {% for image in work_images %}
+                        <div class="work-card">
+                            <img src="{{ image.image.url }}" alt="Work image">
+                            <div class="work-body">
+                                <p>{{ image.caption|default:"Work image" }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>No work images yet.</p>
+                    <div style="margin-top:14px;">
+                        <a href="{% url 'upload_work_image' %}" class="btn btn-primary">Upload Your First Work Image</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>
