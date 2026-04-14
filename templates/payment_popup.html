@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Payment | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .icon i {
+            font-size: 40px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .amount-box {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+
+        .amount-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .amount-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .ussd-code {
+            background: #1a1a2e;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+
+        .instructions {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #1a1a2e;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .phone-number {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 18px;
+        }
+
+        .auto-detect {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            
+            <h1>Payment Initiated</h1>
+            <p class="subtitle">Complete payment using your mobile phone</p>
+
+            <div class="amount-box">
+                <div class="amount-label">Amount to Pay</div>
+                <div class="amount-value">UGX {{ amount }}</div>
+                <div style="font-size: 12px; margin-top: 8px;">To: {{ provider }}</div>
+            </div>
+
+            <div class="instructions">
+                <h3>📱 How to Complete Payment:</h3>
+                <ol>
+                    <li>Pick up your phone registered with <strong>{{ provider }}</strong></li>
+                    <li>Dial the USSD code below on your phone</li>
+                    <li>Enter your PIN when prompted</li>
+                    <li>Confirm the payment amount of <strong>UGX {{ amount }}</strong></li>
+                    <li>Wait for confirmation message</li>
+                </ol>
+            </div>
+
+            <div class="ussd-code">
+                Dial: {{ ussd_code }}
+            </div>
+
+            <div class="auto-detect">
+                <i class="fas fa-info-circle"></i> 
+                Your phone number <span class="phone-number">{{ phone_number }}</span> will receive a USSD popup automatically.
+                If not, please dial the code manually.
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="checkPayment()" class="btn btn-primary" id="confirmBtn">
+                    <i class="fas fa-check-circle"></i> I've Completed Payment
+                </button>
+                <a href="{% url 'service_request_detail' service_request.id %}" class="btn btn-outline">
+                    ← Back to Request
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        function checkPayment() {
+            const btn = document.getElementById('confirmBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Verifying Payment...';
+            
+            // Simulate payment verification (in production, call actual API)
+            setTimeout(() => {
+                window.location.href = "{% url 'confirm_payment' transaction_id %}";
+            }, 2000);
+        }
+
+        // Auto-check payment status every 5 seconds
+        function autoCheckPayment() {
+            fetch(`/api/check-payment/{{ transaction_id }}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'completed') {
+                        window.location.href = "{% url 'service_request_detail' service_request.id %}";
+                    } else if (data.status === 'pending' && attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(autoCheckPayment, 5000);
+                    }
+                })
+                .catch(error => {
+                    console.log('Auto-check error:', error);
+                });
+        }
+        
+        // Start auto-checking after 10 seconds
+        setTimeout(autoCheckPayment, 10000);
+    </script>
+</body>
+</html>

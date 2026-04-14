@@ -7,11 +7,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'dev-secret-key'
 DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS",
-    "127.0.0.1,localhost,buildmity-production.up.railway.app,buildimity.com,www.buildimity.com"
-).split(",")
+# IP Whitelisting for Payment Gateways
+MTN_ALLOWED_IPS = os.environ.get('MTN_ALLOWED_IPS', '').split(',')
+AIRTEL_ALLOWED_IPS = os.environ.get('AIRTEL_ALLOWED_IPS', '').split(',')
+CALLBACK_ALLOWED_IPS = os.environ.get('CALLBACK_ALLOWED_IPS', '').split(',')
 
+# Add IP Whitelist Middleware
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'users.ip_whitelist.IPWhitelistMiddleware',  # Add this
+    # ... other middleware
+]
+ALLOWED_HOSTS = [
+    "buildimity.com",
+    "www.buildimity.com",
+    ".railway.app",   # VERY IMPORTANT for Railway
+    "localhost",
+    "127.0.0.1",
+]
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "https://buildmity-production.up.railway.app,https://buildimity.com,https://www.buildimity.com"
@@ -26,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+   'django.contrib.sitemaps',
     'django.contrib.sites',
 
     'rest_framework',
@@ -84,11 +97,13 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import dj_database_url
+
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    'default': dj_database_url.parse(
+        "postgresql://postgres:VuoenCfAicFsXMmRPiSGSmvMuTmnTHMP@interchange.proxy.rlwy.net:37163/railway",
         conn_max_age=600,
-        ssl_require=False,
+        ssl_require=True
     )
 }
 
@@ -138,3 +153,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
 }
+
+# Sites Framework - for sitemap domain
+SITE_ID = 1
+
+# For development, you can force the domain
+if DEBUG:
+    SITE_URL = 'http://127.0.0.1:8000'
+else:
+    SITE_URL = 'https://buildimity.com'

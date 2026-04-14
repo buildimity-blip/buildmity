@@ -2,19 +2,23 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from users import views
+from users.sitemaps import StaticViewSitemap, ServiceSitemap, ProviderSitemap
 
 
-def home(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    return redirect('login')
+sitemaps = {
+    'static': StaticViewSitemap(),
+    'services': ServiceSitemap(),
+    'providers': ProviderSitemap(),
+}
 
-
-from django.shortcuts import redirect
 
 urlpatterns = [
-    path('', home, name='home'),
     path('admin/', admin.site.urls),
+
+    path('', views.home, name='home'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
 
     path('accounts/', include('allauth.urls')),
     path('', include('users.urls')),

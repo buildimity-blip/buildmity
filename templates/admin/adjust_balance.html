@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ title }}</h1>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Current Balance:</strong> ${{ current_balance }}</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Operation:</label>
+                    <select name="operation" class="form-control">
+                        <option value="add">Add to balance</option>
+                        <option value="subtract">Subtract from balance</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" name="amount" step="0.01" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="{% url 'admin:users_user_changelist' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

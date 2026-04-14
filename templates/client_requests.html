@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Provider Requests | Buildimity</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>My Requests | Client Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -14,7 +12,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f7fb;
             padding: 20px;
         }
@@ -99,7 +97,7 @@
             color: #1a1a2e;
         }
 
-        .client-name {
+        .provider-name {
             color: #667eea;
             font-weight: 600;
         }
@@ -112,13 +110,40 @@
             font-weight: 600;
         }
 
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .badge-accepted { background: #dbeafe; color: #1e40af; }
-        .badge-negotiating { background: #fef3c7; color: #92400e; }
-        .badge-paid { background: #d1fae5; color: #065f46; }
-        .badge-in_progress { background: #ede9fe; color: #6d28d9; }
-        .badge-completed { background: #d4edda; color: #155724; }
-        .badge-cancelled, .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-accepted, .badge-agreed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-negotiating {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-in_progress {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-cancelled, .badge-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
 
         .request-details {
             margin: 15px 0;
@@ -157,11 +182,31 @@
             display: inline-block;
         }
 
-        .btn-success { background: #28a745; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-warning { background: #ffc107; color: #333; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-outline { background: white; color: #667eea; border: 2px solid #667eea; }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
 
         .empty-state {
             background: white;
@@ -191,10 +236,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔧 Service Requests</h1>
-            <p>Manage incoming requests from clients</p>
+            <h1>📋 My Service Requests</h1>
+            <p>Track all your requests and their status</p>
         </div>
 
+        <!-- Statistics -->
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number">{{ requests|length }}</div>
@@ -202,30 +248,31 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number">
-                    {% with pending=requests|length %}
+                    {% with pending=requests|dictsort:"status" %}
                         {{ requests|length }}
                     {% endwith %}
                 </div>
-                <div class="stat-label">Pending Action</div>
+                <div class="stat-label">Active</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number">
-                    {% with accepted=requests|length %}
-                        {{ requests|length }}
-                    {% endwith %}
-                </div>
-                <div class="stat-label">In Progress</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">
-                    {% with completed=requests|length %}
+                    {% with completed=requests|dictsort:"status" %}
                         {{ requests|length }}
                     {% endwith %}
                 </div>
                 <div class="stat-label">Completed</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% with total=requests|dictsort:"status" %}
+                        {{ requests|length }}
+                    {% endwith %}
+                </div>
+                <div class="stat-label">Total Spent</div>
+            </div>
         </div>
 
+        <!-- Requests List -->
         <div class="requests-grid">
             {% for request in requests %}
                 <div class="request-card">
@@ -240,8 +287,8 @@
                                     Service Request
                                 {% endif %}
                             </div>
-                            <div class="client-name">
-                                <i class="fas fa-user"></i> Client: {{ request.client.username }}
+                            <div class="provider-name">
+                                Provider: {{ request.provider.username }}
                             </div>
                         </div>
                         <span class="badge badge-{{ request.status }}">{{ request.status|title }}</span>
@@ -253,64 +300,61 @@
                         </div>
                         {% if request.amount %}
                             <div class="detail-row">
-                                <strong>💰 Amount:</strong> UGX {{ request.amount|floatformat:0 }}
+                                <strong>💰 Amount:</strong> UGX {{ request.amount }}
                             </div>
                         {% endif %}
                         <div class="detail-row">
                             <strong>📅 Created:</strong> {{ request.created_at|date:"M d, Y H:i" }}
                         </div>
-                        {% if request.service_need and request.service_need.location %}
+                        {% if request.accepted_at %}
                             <div class="detail-row">
-                                <strong>📍 Location:</strong> {{ request.service_need.location }}
+                                <strong>✅ Accepted:</strong> {{ request.accepted_at|date:"M d, Y H:i" }}
+                            </div>
+                        {% endif %}
+                        {% if request.completed_at %}
+                            <div class="detail-row">
+                                <strong>🎉 Completed:</strong> {{ request.completed_at|date:"M d, Y H:i" }}
                             </div>
                         {% endif %}
                     </div>
 
+<!-- Add this section for payment button when request is accepted -->
+{% if request.status == 'accepted' or request.status == 'agreed' %}
+    <div class="payment-section" style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 12px;">
+        <strong><i class="fas fa-credit-card"></i> Ready for Payment</strong>
+        <p style="margin: 10px 0;">This request has been accepted. Please complete payment to proceed.</p>
+        <a href="{% url 'make_payment' request.id %}" class="btn btn-success">
+            <i class="fas fa-mobile-alt"></i> Pay with Mobile Money
+        </a>
+    </div>
+{% endif %}
+
                     <div class="request-actions">
-                        <a href="{% url 'service_request_detail' request.id %}" class="btn btn-outline">
-                            <i class="fas fa-eye"></i> View Details
-                        </a>
+                        <a href="{% url 'service_request_detail' request.id %}" class="btn btn-primary">View Details</a>
                         
-                        <!-- Show Accept/Reject buttons for PENDING requests -->
-                        {% if request.status == 'pending' %}
-                            <a href="{% url 'update_request_status' request.id 'accepted' %}" class="btn btn-success">
-                                <i class="fas fa-check"></i> Accept Job
-                            </a>
-                            <a href="{% url 'update_request_status' request.id 'rejected' %}" class="btn btn-danger">
-                                <i class="fas fa-times"></i> Reject
-                            </a>
+                        {% if request.status == 'pending' or request.status == 'negotiating' %}
+                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-warning">Negotiate</a>
                         {% endif %}
                         
-                        <!-- Show Start Work button for ACCEPTED or PAID requests -->
-                        {% if request.status == 'accepted' or request.status == 'paid' %}
-                            <a href="{% url 'update_request_status' request.id 'in_progress' %}" class="btn btn-warning">
-                                <i class="fas fa-play"></i> Start Work
-                            </a>
+                        {% if request.status == 'accepted' or request.status == 'agreed' %}
+                            <a href="{% url 'make_payment' request.id %}" class="btn btn-success">Make Payment</a>
                         {% endif %}
                         
-                        <!-- Show Mark Complete button for IN_PROGRESS requests -->
+                        {% if request.status == 'paid' %}
+                            <a href="{% url 'release_payment' request.id %}" class="btn btn-primary">Release Payment</a>
+                        {% endif %}
+                        
                         {% if request.status == 'in_progress' %}
-                            <a href="{% url 'provider_confirm_completion' request.id %}" class="btn btn-success">
-                                <i class="fas fa-check-double"></i> Mark Complete
-                            </a>
-                        {% endif %}
-                        
-                        <!-- Show Negotiate button for most statuses -->
-                        {% if request.status != 'completed' and request.status != 'rejected' and request.status != 'cancelled' %}
-                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-primary">
-                                <i class="fas fa-comment-dollar"></i> Negotiate
-                            </a>
+                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-outline">Track Progress</a>
                         {% endif %}
                     </div>
                 </div>
             {% empty %}
                 <div class="empty-state">
-                    <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e1;"></i>
-                    <h3 style="margin-top: 20px;">📭 No Requests Yet</h3>
-                    <p>You haven't received any service requests.</p>
-                    <p style="margin-top: 10px;">Complete your profile to attract more clients!</p>
-                    <a href="{% url 'provider_profile' %}" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">
-                        <i class="fas fa-user-edit"></i> Update Your Profile
+                    <h3>📭 No Requests Yet</h3>
+                    <p>You haven't made any service requests.</p>
+                    <a href="{% url 'search_providers' %}" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">
+                        Find Providers to Get Started
                     </a>
                 </div>
             {% endfor %}

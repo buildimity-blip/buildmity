@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Sitemap: https://buildimity.com/sitemap.xml
+
+# Disallow admin and account pages
+Disallow: /admin/
+Disallow: /accounts/
+Disallow: /logout/
+Disallow: /dashboard/

@@ -5,10 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Service Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
             --secondary: #0f172a;
             --success: #16a34a;
             --warning: #f59e0b;
@@ -29,7 +32,7 @@
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.5;
@@ -67,13 +70,17 @@
         }
 
         .brand h1 {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .brand p {
             color: #cbd5e1;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             margin-top: 4px;
         }
 
@@ -87,14 +94,15 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
             padding: 11px 16px;
             border-radius: 12px;
             border: none;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            transition: 0.2s ease;
-            min-height: 44px;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
         }
 
         .btn-primary {
@@ -104,12 +112,18 @@
 
         .btn-primary:hover {
             background: var(--primary-dark);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
         .btn-success {
             background: var(--success);
             color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+            transform: translateY(-2px);
         }
 
         .btn-warning {
@@ -130,11 +144,12 @@
 
         .btn-outline:hover {
             background: #f1f5f9;
+            transform: translateY(-2px);
         }
 
         .btn-sm {
-            padding: 9px 12px;
-            font-size: 0.86rem;
+            padding: 7px 12px;
+            font-size: 0.8rem;
             border-radius: 10px;
         }
 
@@ -149,7 +164,7 @@
             background: linear-gradient(135deg, #dbeafe, #eff6ff);
             border: 1px solid #bfdbfe;
             border-radius: var(--radius);
-            padding: 24px;
+            padding: 28px;
             box-shadow: var(--shadow);
             margin-bottom: 24px;
         }
@@ -163,8 +178,9 @@
         }
 
         .hero h2 {
-            font-size: 1.7rem;
+            font-size: 1.8rem;
             margin-bottom: 8px;
+            font-weight: 700;
         }
 
         .hero p {
@@ -176,11 +192,59 @@
             background: white;
             border: 1px solid #dbeafe;
             color: var(--primary);
-            padding: 10px 14px;
+            padding: 10px 16px;
             border-radius: 999px;
             font-weight: 700;
             white-space: nowrap;
-            text-transform: capitalize;
+        }
+
+        .search-bar-card {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            margin-bottom: 24px;
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .search-bar-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+
+        .search-bar-card p {
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: none;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-form button {
+            padding: 14px 28px;
+            background: white;
+            color: #2563eb;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .search-form button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .grid {
@@ -189,7 +253,7 @@
         }
 
         .stats-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             margin-bottom: 24px;
         }
 
@@ -222,7 +286,7 @@
         }
 
         .card-subtitle {
-            font-size: 0.92rem;
+            font-size: 0.85rem;
             color: var(--muted);
             margin-top: 4px;
         }
@@ -233,7 +297,7 @@
         }
 
         .stat-card h3 {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--muted);
             margin-bottom: 12px;
             font-weight: 600;
@@ -247,19 +311,8 @@
 
         .stat-note {
             margin-top: 8px;
-            font-size: 0.88rem;
+            font-size: 0.8rem;
             color: var(--muted);
-        }
-
-        .stat-card::after {
-            content: "";
-            position: absolute;
-            right: -20px;
-            top: -20px;
-            width: 90px;
-            height: 90px;
-            background: rgba(37, 99, 235, 0.08);
-            border-radius: 50%;
         }
 
         .section-stack {
@@ -277,7 +330,7 @@
             border-radius: 14px;
             padding: 16px;
             background: #fcfdff;
-            transition: 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .item:hover {
@@ -301,14 +354,14 @@
 
         .item-meta {
             color: var(--muted);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             margin-top: 6px;
         }
 
         .item-desc {
             margin-top: 10px;
             color: #334155;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .item-actions {
@@ -321,29 +374,24 @@
         .badge {
             display: inline-flex;
             align-items: center;
-            padding: 7px 12px;
+            padding: 5px 12px;
             border-radius: 999px;
-            font-size: 0.82rem;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: capitalize;
         }
 
-        .badge-open,
-        .badge-pending {
+        .badge-open, .badge-pending {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .badge-matched,
-        .badge-negotiating {
+        .badge-matched, .badge-negotiating {
             background: #dbeafe;
             color: #1d4ed8;
         }
 
-        .badge-accepted,
-        .badge-agreed,
-        .badge-paid,
-        .badge-completed {
+        .badge-accepted, .badge-agreed, .badge-paid {
             background: #dcfce7;
             color: #166534;
         }
@@ -353,8 +401,12 @@
             color: #6d28d9;
         }
 
-        .badge-rejected,
-        .badge-cancelled {
+        .badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-rejected, .badge-cancelled {
             background: #fee2e2;
             color: #991b1b;
         }
@@ -373,17 +425,19 @@
             border: 1px solid var(--border);
             border-radius: 14px;
             padding: 14px 16px;
-            transition: 0.2s ease;
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         .quick-link:hover {
             background: #eff6ff;
             border-color: #bfdbfe;
+            transform: translateX(4px);
         }
 
         .empty-state {
             text-align: center;
-            padding: 28px 16px;
+            padding: 32px 20px;
             border: 1px dashed var(--border);
             border-radius: 16px;
             color: var(--muted);
@@ -401,11 +455,12 @@
         .payment-box h4 {
             color: #166534;
             margin-bottom: 8px;
+            font-size: 0.95rem;
         }
 
         .images-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 14px;
         }
 
@@ -420,8 +475,6 @@
             width: 100%;
             height: 180px;
             object-fit: cover;
-            display: block;
-            background: #e2e8f0;
         }
 
         .work-image-body {
@@ -434,8 +487,7 @@
         }
 
         .earnings-card .card-title,
-        .earnings-card .card-subtitle,
-        .earnings-card .stat-note {
+        .earnings-card .card-subtitle {
             color: #dcfce7;
         }
 
@@ -451,11 +503,19 @@
             margin: 18px 0;
         }
 
+        .service-clickable {
+            cursor: pointer;
+        }
+
+        .service-clickable:hover {
+            background: #eff6ff;
+            border-color: var(--primary-light);
+        }
+
         @media (max-width: 1100px) {
             .stats-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(2, 1fr);
             }
-
             .main-grid {
                 grid-template-columns: 1fr;
             }
@@ -465,43 +525,20 @@
             .container {
                 padding: 16px;
             }
-
-            .topbar {
-                padding: 16px;
-            }
-
-            .hero {
-                padding: 18px;
-            }
-
-            .hero h2 {
-                font-size: 1.35rem;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-
             .images-grid {
                 grid-template-columns: 1fr;
             }
-
-            .item-top {
-                flex-direction: column;
-                align-items: flex-start;
+            .hero h2 {
+                font-size: 1.4rem;
             }
-
-            .topbar-inner {
+            .search-form {
                 flex-direction: column;
-                align-items: flex-start;
             }
-
-            .top-actions {
+            .search-form button {
                 width: 100%;
-            }
-
-            .top-actions .btn {
-                flex: 1;
             }
         }
     </style>
@@ -512,85 +549,105 @@
     <header class="topbar">
         <div class="topbar-inner">
             <div class="brand">
-                <h1>Service Marketplace Dashboard</h1>
-                <p>Welcome back, {{ user.username }}.</p>
+                <h1><i class="fas fa-handshake"></i> ServiceMarket</h1>
+                <p>Welcome back, {{ user.username }}!</p>
             </div>
-
             <div class="top-actions">
                 {% if user.role == 'client' %}
-                    <a href="{% url 'create_service_need' %}" class="btn btn-primary">Request a Service</a>
+                    <a href="{% url 'create_service_need' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Request Service
+                    </a>
+                    <a href="{% url 'client_search' %}" class="btn btn-outline">
+                        <i class="fas fa-search"></i> Find Providers
+                    </a>
                 {% endif %}
-
                 {% if user.role == 'provider' %}
-                    <a href="{% url 'upload_work_image' %}" class="btn btn-primary">Upload Work Image</a>
+                    <a href="{% url 'upload_work_image' %}" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Upload Work
+                    </a>
+                    <a href="{% url 'provider_profile' %}" class="btn btn-outline">
+                        <i class="fas fa-user-edit"></i> Edit Profile
+                    </a>
                 {% endif %}
+               <!-- DON'T use this (GET request) -->
 
-                <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>
-            </div>
+<!-- USE this (POST request with form) -->
+<form action="{% url 'logout' %}" method="post" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit" style="background: none; border: none; color: inherit; cursor: pointer; font-family: inherit; font-size: inherit;">Logout</button>
+</form> 
         </div>
     </header>
 
     <main class="container">
-
         {% if messages %}
-            <div style="margin-bottom: 20px;">
-                {% for message in messages %}
-                    <div class="card" style="padding: 14px 16px; border-left: 5px solid var(--primary);">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
+            {% for message in messages %}
+                <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--primary);">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+            {% endfor %}
         {% endif %}
 
+        <!-- CLIENT DASHBOARD -->
         {% if user.role == 'client' %}
-            <section class="hero">
+            <div class="hero">
                 <div class="hero-content">
                     <div>
-                        <h2>Client Dashboard</h2>
-                        <p>Create service needs, review providers, negotiate pricing, and complete payments from one place.</p>
+                        <h2><i class="fas fa-user-friends"></i> Client Dashboard</h2>
+                        <p>Post service needs, find trusted providers, negotiate prices, and manage payments all in one place.</p>
                     </div>
-                    <div class="hero-badge">Role: Client</div>
+                    <div class="hero-badge"><i class="fas fa-user"></i> Client Account</div>
                 </div>
-            </section>
+            </div>
 
-            <section class="grid stats-grid">
+            <!-- Quick Search Bar -->
+            <div class="search-bar-card">
+                <h3><i class="fas fa-search"></i> Find a Service Provider</h3>
+                <p>Search by service type (Plumbing, Electrical, Cleaning, etc.)</p>
+                <form action="{% url 'client_search' %}" method="get" class="search-form">
+                    <input type="text" name="q" placeholder="e.g., Plumbing, Electrical, Carpentry, Painting..." value="{{ request.GET.q }}">
+                    <button type="submit"><i class="fas fa-arrow-right"></i> Search Providers</button>
+                </form>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid stats-grid">
                 <div class="card stat-card">
-                    <h3>Total Requests</h3>
+                    <h3><i class="fas fa-tasks"></i> Total Requests</h3>
                     <div class="stat-value">{{ total_requests|default:0 }}</div>
-                    <div class="stat-note">All service requests you have created</div>
+                    <div class="stat-note">All service requests created</div>
                 </div>
-
                 <div class="card stat-card">
-                    <h3>Pending</h3>
+                    <h3><i class="fas fa-clock"></i> Pending</h3>
                     <div class="stat-value">{{ pending_requests|default:0 }}</div>
                     <div class="stat-note">Waiting for provider response</div>
                 </div>
-
                 <div class="card stat-card">
-                    <h3>Accepted</h3>
+                    <h3><i class="fas fa-check-circle"></i> Accepted</h3>
                     <div class="stat-value">{{ accepted_requests|default:0 }}</div>
-                    <div class="stat-note">Ready for payment or work start</div>
+                    <div class="stat-note">Ready for payment or work</div>
                 </div>
-
                 <div class="card stat-card">
-                    <h3>Negotiating / Completed</h3>
+                    <h3><i class="fas fa-chart-line"></i> Active/Completed</h3>
                     <div class="stat-value">{{ negotiating_requests|default:0 }}/{{ completed_requests|default:0 }}</div>
-                    <div class="stat-note">Active discussions and finished jobs</div>
+                    <div class="stat-note">Negotiations / Finished jobs</div>
                 </div>
-            </section>
+            </div>
 
-            <section class="grid main-grid">
+            <!-- Main Content Grid -->
+            <div class="grid main-grid">
                 <div class="section-stack">
-
+                    <!-- Recent Service Needs -->
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Recent Service Needs</div>
-                                <div class="card-subtitle">Your latest requested services</div>
+                                <div class="card-title"><i class="fas fa-list-alt"></i> Recent Service Needs</div>
+                                <div class="card-subtitle">Your latest service requests</div>
                             </div>
-                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">New Need</a>
+                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> New Need
+                            </a>
                         </div>
-
                         {% if needs %}
                             <div class="item-list">
                                 {% for need in needs %}
@@ -607,393 +664,393 @@
                                                     {% endif %}
                                                 </div>
                                                 <div class="item-meta">
-                                                    {% if need.location %}
-                                                        {{ need.location }}
-                                                    {% endif %}
-                                                    {% if need.created_at %}
-                                                        {% if need.location %} • {% endif %}Created: {{ need.created_at|date:"M d, Y" }}
-                                                    {% endif %}
+                                                    <i class="fas fa-map-marker-alt"></i> {{ need.location|default:"Any location" }}
+                                                    • <i class="fas fa-calendar"></i> {{ need.created_at|date:"M d, Y" }}
                                                 </div>
                                             </div>
-
-                                            {% if need.status %}
-                                                <span class="badge badge-{{ need.status|slugify }}">{{ need.status }}</span>
-                                            {% else %}
-                                                <span class="badge badge-open">Open</span>
-                                            {% endif %}
+                                            <span class="badge badge-{{ need.status|default:'open'|slugify }}">{{ need.status|default:"Open" }}</span>
                                         </div>
-
                                         {% if need.description %}
-                                            <div class="item-desc">{{ need.description }}</div>
+                                            <div class="item-desc">{{ need.description|truncatechars:120 }}</div>
                                         {% endif %}
-
                                         <div class="item-actions">
-                                            {% if need.id %}
-                                                <a href="{% url 'match_providers' need.id %}" class="btn btn-outline btn-sm">View Matches</a>
-                                            {% endif %}
-                                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">Request Similar Service</a>
+                                            <a href="{% url 'match_providers' need.id %}" class="btn btn-outline btn-sm">
+                                                <i class="fas fa-users"></i> View Matches
+                                            </a>
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
                         {% else %}
                             <div class="empty-state">
-                                <p>You have not created any service needs yet.</p>
-                                <div style="margin-top: 14px;">
-                                    <a href="{% url 'create_service_need' %}" class="btn btn-primary">Create Your First Service Need</a>
-                                </div>
+                                <p><i class="fas fa-inbox"></i> No service needs yet.</p>
+                                <a href="{% url 'create_service_need' %}" class="btn btn-primary" style="margin-top: 12px;">Create Your First Request</a>
                             </div>
                         {% endif %}
                     </div>
 
+                    <!-- Recent Requests & Negotiations -->
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Recent Requests & Negotiations</div>
-                                <div class="card-subtitle">Track provider responses and ongoing discussions</div>
+                                <div class="card-title"><i class="fas fa-comments"></i> Active Requests & Negotiations</div>
+                                <div class="card-subtitle">Track provider responses and discussions</div>
                             </div>
                         </div>
-
                         {% if requests %}
                             <div class="item-list">
-                                {% for request in requests %}
+                                {% for req in requests %}
                                     <div class="item">
                                         <div class="item-top">
                                             <div>
                                                 <div class="item-title">
-                                                    {% if request.service_need and request.service_need.service %}
-                                                        {{ request.service_need.service.name }}
-                                                    {% elif request.service_need and request.service_need.custom_service_name %}
-                                                        {{ request.service_need.custom_service_name }}
-                                                    {% elif request.service %}
-                                                        {{ request.service.name }}
+                                                    {% if req.service_need %}
+                                                        {{ req.service_need.service_display }}
+                                                    {% elif req.service %}
+                                                        {{ req.service.name }}
                                                     {% else %}
                                                         Service Request
                                                     {% endif %}
                                                 </div>
-
                                                 <div class="item-meta">
-                                                    {% if request.provider %}
-                                                        Provider: {{ request.provider.username }}
-                                                    {% endif %}
-                                                    {% if request.created_at %}
-                                                        {% if request.provider %} • {% endif %}{{ request.created_at|date:"M d, Y - H:i" }}
-                                                    {% endif %}
+                                                    <i class="fas fa-user"></i> Provider: {{ req.provider.username }}
+                                                    • <i class="fas fa-clock"></i> {{ req.created_at|date:"M d, Y" }}
                                                 </div>
                                             </div>
-
-                                            {% if request.status %}
-                                                <span class="badge badge-{{ request.status|slugify }}">{{ request.status }}</span>
-                                            {% else %}
-                                                <span class="badge badge-pending">Pending</span>
-                                            {% endif %}
+                                            <span class="badge badge-{{ req.status|slugify }}">{{ req.status }}</span>
                                         </div>
-
-                                        {% if request.message %}
-                                            <div class="item-desc">{{ request.message }}</div>
+                                        {% if req.message %}
+                                            <div class="item-desc">{{ req.message|truncatechars:100 }}</div>
                                         {% endif %}
-
                                         <div class="item-actions">
-                                            <a href="{% url 'service_request_detail' request.id %}" class="btn btn-outline btn-sm">Open</a>
-                                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-primary btn-sm">Negotiate</a>
-
-                                            {% if request.status == 'paid' %}
-                                                <a href="{% url 'release_payment' request.id %}" class="btn btn-success btn-sm">Release Payment</a>
+                                            <a href="{% url 'service_request_detail' req.id %}" class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <a href="{% url 'negotiation_room' req.id %}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-comment-dollar"></i> Negotiate
+                                            </a>
+                                            {% if req.status == 'accepted' or req.status == 'agreed' %}
+                                                <a href="{% url 'make_payment' req.id %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-credit-card"></i> Pay Now
+                                                </a>
+                                            {% endif %}
+                                            {% if req.status == 'paid' %}
+                                                <a href="{% url 'release_payment' req.id %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check-double"></i> Release Payment
+                                                </a>
                                             {% endif %}
                                         </div>
-
-                                        {% if request.status == 'accepted' or request.status == 'agreed' %}
-                                            <div class="payment-box">
-                                                <h4>Payment Ready</h4>
-                                                <p style="margin-bottom: 12px;">
-                                                    This request is ready for payment. Continue with MTN Mobile Money or Airtel Money.
-                                                </p>
-                                                <div class="item-actions">
-                                                    <a href="{% url 'make_payment' request.id %}" class="btn btn-success btn-sm">Pay Now</a>
-                                                    <a href="#" class="btn btn-outline btn-sm">MTN Mobile Money</a>
-                                                    <a href="#" class="btn btn-outline btn-sm">Airtel Money</a>
-                                                </div>
-                                            </div>
-                                        {% endif %}
                                     </div>
                                 {% endfor %}
                             </div>
                         {% else %}
                             <div class="empty-state">
-                                <p>No requests or negotiations yet.</p>
+                                <p><i class="fas fa-comment-slash"></i> No active requests.</p>
+                                <a href="{% url 'search_providers' %}" class="btn btn-primary" style="margin-top: 12px;">Find Providers to Start</a>
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
+                <!-- Sidebar -->
                 <div class="section-stack">
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Quick Actions</div>
-                                <div class="card-subtitle">Common things you can do</div>
+                                <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+                                <div class="card-subtitle">Common tasks</div>
                             </div>
                         </div>
-
                         <div class="quick-links">
                             <a href="{% url 'create_service_need' %}" class="quick-link">
-                                <span>Request a New Service</span>
-                                <strong>→</strong>
+                                <span><i class="fas fa-pen-alt"></i> Post a Service Need</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
-
+                            <a href="{% url 'client_search' %}" class="quick-link">
+                                <span><i class="fas fa-search"></i> Search for Providers</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
                             <a href="{% url 'client_requests' %}" class="quick-link">
-                                <span>View My Requests</span>
-                                <strong>→</strong>
+                                <span><i class="fas fa-history"></i> View All Requests</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
-
-                            <a href="{% url 'search_providers' %}" class="quick-link">
-                                <span>Find Providers</span>
-                                <strong>→</strong>
+                            <a href="{% url 'all_services' %}" class="quick-link">
+                                <span><i class="fas fa-tags"></i> Browse All Services</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
                     </div>
 
+                    <!-- Available Services -->
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Available Services</div>
-                                <div class="card-subtitle">Choose from listed services</div>
+                                <div class="card-title"><i class="fas fa-star"></i> Popular Services</div>
+                                <div class="card-subtitle">Click to find providers</div>
                             </div>
                         </div>
-
                         {% if services %}
                             <div class="item-list">
-                                {% for service in services %}
-                                    <div class="item">
+                                {% for service in services|slice:":5" %}
+                                    <div class="item service-clickable" onclick="window.location.href='{% url 'client_search' %}?q={{ service.name|urlencode }}'">
                                         <div class="item-title">{{ service.name }}</div>
-                                        {% if service.description %}
-                                            <div class="item-desc">{{ service.description|truncatechars:100 }}</div>
-                                        {% endif %}
+                                        <div class="item-meta">
+                                            <i class="fas fa-users"></i> {{ service.providers.count }} provider(s) available
+                                        </div>
                                     </div>
                                 {% endfor %}
                             </div>
+                            {% if services|length > 5 %}
+                                <div style="margin-top: 12px; text-align: center;">
+                                    <a href="{% url 'all_services' %}" class="btn btn-outline btn-sm">View All {{ services|length }} Services →</a>
+                                </div>
+                            {% endif %}
                         {% else %}
                             <div class="empty-state">
-                                <p>No services available right now.</p>
+                                <p>No services available yet.</p>
                             </div>
                         {% endif %}
                     </div>
-                </div>
-            </section>
 
-        {% elif user.role == 'provider' %}
-            <section class="hero">
-                <div class="hero-content">
-                    <div>
-                        <h2>Provider Dashboard</h2>
-                        <p>Manage incoming requests, negotiate pricing, update job progress, and showcase your recent work.</p>
-                    </div>
-                    <div class="hero-badge">Role: Provider</div>
-                </div>
-            </section>
-
-            <section class="grid stats-grid">
-                <div class="card stat-card">
-                    <h3>Total Requests</h3>
-                    <div class="stat-value">{{ total_requests|default:0 }}</div>
-                    <div class="stat-note">All client requests assigned to you</div>
-                </div>
-
-                <div class="card stat-card">
-                    <h3>Pending</h3>
-                    <div class="stat-value">{{ pending_requests|default:0 }}</div>
-                    <div class="stat-note">New requests awaiting action</div>
-                </div>
-
-                <div class="card stat-card">
-                    <h3>Accepted / Negotiating</h3>
-                    <div class="stat-value">{{ accepted_requests|default:0 }}/{{ negotiating_requests|default:0 }}</div>
-                    <div class="stat-note">Accepted jobs and active negotiations</div>
-                </div>
-
-                <div class="card stat-card">
-                    <h3>Completed</h3>
-                    <div class="stat-value">{{ completed_requests|default:0 }}</div>
-                    <div class="stat-note">Successfully finished jobs</div>
-                </div>
-            </section>
-
-            <section class="grid main-grid">
-                <div class="section-stack">
+                    <!-- Recently Searched -->
+                    {% if recent_searches %}
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Incoming Requests</div>
-                                <div class="card-subtitle">Review and manage client service requests</div>
+                                <div class="card-title"><i class="fas fa-history"></i> Recent Searches</div>
+                                <div class="card-subtitle">Your search history</div>
                             </div>
                         </div>
+                        <div class="quick-links">
+                            {% for search in recent_searches %}
+                                <a href="{% url 'client_search' %}?q={{ search.query|urlencode }}" class="quick-link">
+                                    <span><i class="fas fa-search"></i> {{ search.query }}</span>
+                                    <span style="font-size: 0.7rem;">{{ search.created_at|timesince }} ago</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
 
+        <!-- PROVIDER DASHBOARD -->
+        {% elif user.role == 'provider' %}
+            <div class="hero">
+                <div class="hero-content">
+                    <div>
+                        <h2><i class="fas fa-tools"></i> Provider Dashboard</h2>
+                        <p>Manage client requests, negotiate pricing, track job progress, and showcase your work.</p>
+                    </div>
+                    <div class="hero-badge"><i class="fas fa-briefcase"></i> Provider Account</div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid stats-grid">
+                <div class="card stat-card">
+                    <h3><i class="fas fa-envelope"></i> Total Requests</h3>
+                    <div class="stat-value">{{ total_requests|default:0 }}</div>
+                    <div class="stat-note">All client requests</div>
+                </div>
+                <!-- Add to provider stats -->
+<div class="card stat-card">
+    <h3>⭐ Average Rating</h3>
+    <div class="stat-value">{{ user.average_rating|default:"0.0" }}</div>
+    <div class="stat-note">From {{ user.total_ratings }} review(s)</div>
+</div>
+                <div class="card stat-card">
+                    <h3><i class="fas fa-hourglass-half"></i> Pending</h3>
+                    <div class="stat-value">{{ pending_requests|default:0 }}</div>
+                    <div class="stat-note">Awaiting your response</div>
+                </div>
+                <div class="card stat-card">
+                    <h3><i class="fas fa-handshake"></i> Active</h3>
+                    <div class="stat-value">{{ accepted_requests|default:0 }}/{{ negotiating_requests|default:0 }}</div>
+                    <div class="stat-note">Accepted / Negotiating</div>
+                </div>
+                <div class="card stat-card">
+                    <h3><i class="fas fa-check-circle"></i> Completed</h3>
+                    <div class="stat-value">{{ completed_requests|default:0 }}</div>
+                    <div class="stat-note">Successfully finished</div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid main-grid">
+                <div class="section-stack">
+                    <!-- Incoming Requests -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title"><i class="fas fa-inbox"></i> Incoming Requests</div>
+                                <div class="card-subtitle">Review and respond to clients</div>
+                            </div>
+                        </div>
                         {% if requests %}
                             <div class="item-list">
-                                {% for request in requests %}
+                                {% for req in requests %}
                                     <div class="item">
                                         <div class="item-top">
                                             <div>
                                                 <div class="item-title">
-                                                    {% if request.service_need and request.service_need.service %}
-                                                        {{ request.service_need.service.name }}
-                                                    {% elif request.service_need and request.service_need.custom_service_name %}
-                                                        {{ request.service_need.custom_service_name }}
-                                                    {% elif request.service %}
-                                                        {{ request.service.name }}
+                                                    {% if req.service_need %}
+                                                        {{ req.service_need.service_display }}
+                                                    {% elif req.service %}
+                                                        {{ req.service.name }}
                                                     {% else %}
-                                                        Client Request
+                                                        Service Request
                                                     {% endif %}
                                                 </div>
-
                                                 <div class="item-meta">
-                                                    {% if request.client %}
-                                                        Client: {{ request.client.username }}
-                                                    {% endif %}
-                                                    {% if request.created_at %}
-                                                        {% if request.client %} • {% endif %}{{ request.created_at|date:"M d, Y - H:i" }}
-                                                    {% endif %}
+                                                    <i class="fas fa-user"></i> Client: {{ req.client.username }}
+                                                    • <i class="fas fa-clock"></i> {{ req.created_at|date:"M d, Y" }}
                                                 </div>
                                             </div>
-
-                                            {% if request.status %}
-                                                <span class="badge badge-{{ request.status|slugify }}">{{ request.status }}</span>
-                                            {% else %}
-                                                <span class="badge badge-pending">Pending</span>
-                                            {% endif %}
+                                            <span class="badge badge-{{ req.status|slugify }}">{{ req.status }}</span>
                                         </div>
-
-                                        {% if request.message %}
-                                            <div class="item-desc">{{ request.message }}</div>
+                                        {% if req.message %}
+                                            <div class="item-desc">{{ req.message|truncatechars:100 }}</div>
                                         {% endif %}
-
                                         <div class="item-actions">
-                                            <a href="{% url 'service_request_detail' request.id %}" class="btn btn-outline btn-sm">View</a>
-
-                                            {% if request.status == 'pending' %}
-                                                <a href="{% url 'update_request_status' request.id 'accepted' %}" class="btn btn-success btn-sm">Accept</a>
-                                                <a href="{% url 'update_request_status' request.id 'rejected' %}" class="btn btn-danger btn-sm">Reject</a>
+                                            <a href="{% url 'service_request_detail' req.id %}" class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            {% if req.status == 'pending' %}
+                                                <a href="{% url 'update_request_status' req.id 'accepted' %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check"></i> Accept
+                                                </a>
+                                                <a href="{% url 'update_request_status' req.id 'rejected' %}" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </a>
                                             {% endif %}
-
-                                            {% if request.status == 'accepted' or request.status == 'paid' %}
-                                                <a href="{% url 'update_request_status' request.id 'in_progress' %}" class="btn btn-warning btn-sm">Mark In Progress</a>
+                                            {% if req.status == 'accepted' or req.status == 'paid' %}
+                                                <a href="{% url 'update_request_status' req.id 'in_progress' %}" class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-play"></i> Start Work
+                                                </a>
                                             {% endif %}
-
-                                            {% if request.status == 'in_progress' or request.status == 'negotiating' %}
-                                                <a href="{% url 'update_request_status' request.id 'completed' %}" class="btn btn-success btn-sm">Mark Complete</a>
+                                            {% if req.status == 'in_progress' or req.status == 'negotiating' %}
+                                                <a href="{% url 'update_request_status' req.id 'completed' %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check-double"></i> Complete
+                                                </a>
                                             {% endif %}
-
-                                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-primary btn-sm">Negotiate</a>
+                                            <a href="{% url 'negotiation_room' req.id %}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-comment-dollar"></i> Negotiate
+                                            </a>
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
                         {% else %}
                             <div class="empty-state">
-                                <p>No incoming requests yet.</p>
+                                <p><i class="fas fa-inbox"></i> No incoming requests yet.</p>
+                                <p style="margin-top: 8px;">Share your profile to get more clients!</p>
                             </div>
                         {% endif %}
                     </div>
 
+                    <!-- Work Gallery -->
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Work Gallery</div>
-                                <div class="card-subtitle">Showcase your recent work</div>
+                                <div class="card-title"><i class="fas fa-images"></i> Work Gallery</div>
+                                <div class="card-subtitle">Showcase your best work</div>
                             </div>
-                            <a href="{% url 'upload_work_image' %}" class="btn btn-primary btn-sm">Upload</a>
+                            <a href="{% url 'upload_work_image' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-upload"></i> Upload
+                            </a>
                         </div>
-
                         {% if work_images %}
                             <div class="images-grid">
-                                {% for image in work_images %}
+                                {% for img in work_images %}
                                     <div class="work-image-card">
-                                        {% if image.image %}
-                                            <img src="{{ image.image.url }}" alt="Work Image">
-                                        {% else %}
-                                            <img src="{% static 'images/placeholder.jpg' %}" alt="Placeholder">
+                                        {% if img.image %}
+                                            <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Work Image' }}">
                                         {% endif %}
                                         <div class="work-image-body">
-                                            <strong>{{ image.caption|default:"Project Image" }}</strong>
+                                            <strong>{{ img.caption|default:"Project Work" }}</strong>
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
                         {% else %}
                             <div class="empty-state">
-                                <p>No work images uploaded yet.</p>
-                                <div style="margin-top: 14px;">
-                                    <a href="{% url 'upload_work_image' %}" class="btn btn-primary">Upload First Image</a>
-                                </div>
+                                <p><i class="fas fa-camera"></i> No work images yet.</p>
+                                <a href="{% url 'upload_work_image' %}" class="btn btn-primary" style="margin-top: 12px;">Upload Your First Image</a>
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
+                <!-- Sidebar -->
                 <div class="section-stack">
                     <div class="card earnings-card">
-                        <div class="card-title">Total Earnings</div>
+                        <div class="card-title"><i class="fas fa-money-bill-wave"></i> Total Earnings</div>
                         <div class="card-subtitle">From completed work</div>
-                        <div class="earnings-amount">UGX {{ total_earnings|default:0 }}</div>
-                        <div class="stat-note">Keep delivering quality work to grow your revenue.</div>
+                        <div class="earnings-amount">UGX {{ total_earnings|default:"0"|floatformat:2 }}</div>
+                        <div class="stat-note" style="margin-top: 8px;">Keep delivering quality work to grow your revenue.</div>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Quick Actions</div>
-                                <div class="card-subtitle">Shortcuts for daily provider tasks</div>
+                                <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+                                <div class="card-subtitle">Manage your business</div>
                             </div>
                         </div>
-
                         <div class="quick-links">
                             <a href="{% url 'upload_work_image' %}" class="quick-link">
-                                <span>Upload Work Image</span>
-                                <strong>→</strong>
+                                <span><i class="fas fa-camera"></i> Upload Work Image</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
-
                             <a href="{% url 'provider_requests' %}" class="quick-link">
-                                <span>View All Requests</span>
-                                <strong>→</strong>
+                                <span><i class="fas fa-list"></i> View All Requests</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
-
                             <a href="{% url 'provider_profile' %}" class="quick-link">
-                                <span>Update Profile</span>
-                                <strong>→</strong>
+                                <span><i class="fas fa-user-edit"></i> Update Profile</span>
+                                <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
+        <!-- ADMIN DASHBOARD -->
         {% elif user.role == 'admin' %}
-            <section class="hero">
+            <div class="hero">
                 <div class="hero-content">
                     <div>
-                        <h2>Admin Dashboard</h2>
-                        <p>Monitor users, providers, service needs, requests, searches, notifications, and payments.</p>
+                        <h2><i class="fas fa-shield-alt"></i> Admin Dashboard</h2>
+                        <p>Monitor platform activity, manage users, review providers, and oversee all transactions.</p>
                     </div>
-                    <div class="hero-badge">Role: Admin</div>
+                    <div class="hero-badge"><i class="fas fa-crown"></i> Admin Access</div>
                 </div>
-            </section>
+            </div>
 
             <div class="card">
-                <div class="card-title">Admin Area</div>
-                <div class="card-subtitle" style="margin-top: 6px;">
-                    Use the admin dashboard to verify providers, review platform activity, and manage users.
+                <div class="card-header">
+                    <div>
+                        <div class="card-title"><i class="fas fa-chart-line"></i> Platform Overview</div>
+                        <div class="card-subtitle">System statistics and management</div>
+                    </div>
                 </div>
-                <div class="divider"></div>
                 <div class="quick-links">
                     <a href="{% url 'admin_dashboard' %}" class="quick-link">
-                        <span>Open Admin Dashboard</span>
-                        <strong>→</strong>
+                        <span><i class="fas fa-tachometer-alt"></i> Open Full Admin Dashboard</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="/admin/" class="quick-link">
+                        <span><i class="fas fa-database"></i> Django Admin Panel</span>
+                        <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
+
         {% else %}
             <div class="card">
                 <div class="empty-state">
-                    <p>No dashboard is available for this account.</p>
+                    <p><i class="fas fa-exclamation-triangle"></i> No dashboard available for this account type.</p>
                 </div>
             </div>
         {% endif %}
@@ -1001,14 +1058,12 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const buttons = document.querySelectorAll(".btn");
-        buttons.forEach(button => {
-            button.addEventListener("click", function () {
-                this.style.transform = "scale(0.98)";
-                setTimeout(() => {
-                    this.style.transform = "";
-                }, 120);
+    document.addEventListener("DOMContentLoaded", function() {
+        // Add click animation to buttons
+        document.querySelectorAll(".btn").forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                this.style.transform = "scale(0.96)";
+                setTimeout(() => { this.style.transform = ""; }, 150);
             });
         });
     });

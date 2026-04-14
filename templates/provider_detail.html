@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Provider Profile</title>
+    <title>Provider Profile | Service Marketplace</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,36 +35,109 @@
             object-fit: cover;
             border-radius: 10px;
         }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge-verified {
+            background: #d4edda;
+            color: #155724;
+        }
+        .info-row {
+            margin: 12px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>{{ provider.username }}</h2>
+        <h2>{{ provider.username }}
+            {% if provider.is_verified %}
+                <span class="badge badge-verified">✓ Verified</span>
+            {% endif %}
+        </h2>
 
         {% if provider.profile_photo %}
             <img class="profile-photo" src="{{ provider.profile_photo.url }}" alt="Profile photo">
+        {% else %}
+            <div class="profile-photo" style="background: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 48px;">
+                {{ provider.username|first|upper }}
+            </div>
         {% endif %}
 
-        <p><strong>Service:</strong> {{ provider.service_name }}</p>
-        <p><strong>Location:</strong> {{ provider.location }}</p>
-        <p><strong>Phone:</strong> {{ provider.phone_number }}</p>
-        <p><strong>About:</strong> {{ provider.bio }}</p>
+        <div class="info-row">
+            <strong>🔧 Service:</strong> {{ provider.service.name }}
+        </div>
+        
+        <div class="info-row">
+            <strong>📍 Location:</strong> {{ provider.location|default:"Not specified" }}
+        </div>
+        
+        <div class="info-row">
+            <strong>📞 Phone:</strong> {{ provider.phone_number|default:"Not provided" }}
+        </div>
+        
+        <div class="info-row">
+            <strong>📧 Email:</strong> {{ provider.email }}
+        </div>
+        
+        <div class="info-row">
+            <strong>📝 About:</strong><br>
+            {{ provider.bio|default:"This provider hasn't added a bio yet." }}
+        </div>
 
-        <p><a href="/providers/{{ provider.id }}/request/">Request Service</a></p>
+        <!-- FIXED: Use Django URL pattern instead of hardcoded URL -->
+        <p>
+            <a href="{% url 'request_service' provider.id %}" class="btn">📝 Request Service</a>
+            <a href="{% url 'search_providers' %}" class="btn btn-secondary">← Back to Search</a>
+        </p>
 
-        <h3>Work Samples</h3>
+        <h3>📸 Work Samples</h3>
         <div class="gallery">
-            {% for item in provider.work_images.all %}
+            {% for item in work_images %}
                 <div>
                     <img src="{{ item.image.url }}" alt="{{ item.caption }}">
-                    <p>{{ item.caption }}</p>
+                    <p style="margin-top: 8px; font-size: 12px;">{{ item.caption|default:"Work sample" }}</p>
                 </div>
             {% empty %}
                 <p>No work images uploaded yet.</p>
             {% endfor %}
         </div>
-
-        <p><a href="/providers/search/">Back</a></p>
     </div>
 </body>
 </html>
+<!-- Ratings Section -->
+<div class="card" style="margin-top: 20px;">
+    <h3>⭐ Client Ratings</h3>
+    {% if provider.average_rating > 0 %}
+        <div style="font-size: 24px; color: #ffc107;">
+            {% for i in "12345"|make_list %}
+                {% if forloop.counter <= provider.average_rating %}★{% else %}☆{% endif %}
+            {% endfor %}
+            ({{ provider.average_rating }}/5)
+        </div>
+        <p>Based on {{ provider.total_ratings }} review(s)</p>
+    {% else %}
+        <p>No ratings yet. Be the first to rate this provider!</p>
+    {% endif %}
+    <a href="{% url 'provider_ratings' provider.id %}" class="btn btn-outline" style="margin-top: 10px;">View All Reviews</a>
+</div>

@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buidimty - Login</title>
+    <title>Login | Buildimity</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -15,51 +14,21 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            position: relative;
-            overflow-x: hidden;
+            justify-content: center;
+            padding: 20px;
         }
 
-        /* Animated background elements */
-        body::before {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: moveGrid 20s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes moveGrid {
-            0% {
-                transform: translate(0, 0);
-            }
-            100% {
-                transform: translate(50px, 50px);
-            }
-        }
-
-        /* Main Card */
-        .card {
-            background: white;
-            border-radius: 32px;
-            padding: 2.5rem;
+        .login-container {
+            max-width: 420px;
             width: 100%;
-            max-width: 440px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.5s ease;
-            margin: 1rem;
+            animation: fadeInUp 0.5s ease;
         }
 
-        @keyframes slideUp {
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(30px);
@@ -70,340 +39,151 @@
             }
         }
 
-        /* Logo */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
         .logo {
             text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .logo-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .logo-icon i {
-            font-size: 2.5rem;
-            color: white;
-        }
-
-        .logo h1 {
-            font-size: 1.8rem;
+            font-size: 32px;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
         }
 
-        .logo p {
-            color: #718096;
-            font-size: 0.9rem;
-        }
-
-        /* Form Styles */
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 1.5rem;
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
             color: #1a1a2e;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 14px;
         }
 
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #4a5568;
-            font-size: 0.9rem;
-        }
-
-        .input-group {
-            position: relative;
-        }
-
-        .input-group i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0aec0;
-            transition: color 0.3s ease;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
         }
 
         input {
             width: 100%;
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            padding: 14px 16px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-size: 15px;
             font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
         }
 
         input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        input:hover {
-            border-color: #cbd5e0;
-        }
-
-        /* Error Styles */
-        .errorlist {
-            color: #e53e3e;
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-            list-style: none;
-            padding-left: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .errorlist li {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .errorlist li::before {
-            content: '⚠️';
-        }
-
-        /* Button */
-        button {
+        .btn {
             width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 14px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
+            transition: all 0.3s;
             font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
         }
 
-        button:hover {
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
-        /* Links */
         .links {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
             border-top: 1px solid #e2e8f0;
         }
 
         .links p {
-            margin: 0.75rem 0;
-            text-align: center;
+            margin: 10px 0;
+            font-size: 14px;
         }
 
         .links a {
-            color: #667eea;
+            color: #2563eb;
             text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-weight: 600;
         }
 
         .links a:hover {
-            color: #764ba2;
-            transform: translateX(5px);
+            text-decoration: underline;
         }
 
-        /* Demo Credentials (Optional) */
-        .demo-credentials {
-            background: #f7fafc;
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px 16px;
             border-radius: 12px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-            border: 1px solid #e2e8f0;
-        }
-
-        .demo-credentials p {
-            font-size: 0.8rem;
-            color: #718096;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .demo-credentials code {
-            display: block;
-            background: white;
-            padding: 0.5rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            color: #667eea;
-            margin-top: 0.25rem;
-            border: 1px solid #e2e8f0;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .card {
-                padding: 1.5rem;
-                margin: 1rem;
-            }
-            
-            .logo h1 {
-                font-size: 1.5rem;
-            }
-            
-            h2 {
-                font-size: 1.3rem;
-            }
-        }
-
-        /* Custom checkbox styling if needed */
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 1rem 0;
-        }
-
-        .checkbox-group input {
-            width: auto;
-            padding: 0;
-            margin: 0;
-        }
-
-        .checkbox-group label {
-            margin: 0;
-            font-size: 0.9rem;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #dc2626;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="logo">
-            <div class="logo-icon">
-                <i class="fas fa-hard-hat"></i>
-            </div>
-            <h1>Buidimty</h1>
-            <p>Connect with trusted service providers</p>
-        </div>
+    <div class="login-container">
+        <div class="card">
+            <div class="logo">Buildimity</div>
+            <h1>Welcome Back</h1>
+            <div class="subtitle">Login to your account</div>
 
-        <h2>Welcome Back</h2>
-        
-        <form method="post">
-            {% csrf_token %}
-            
-            {% if form.non_field_errors %}
-                <div class="errorlist">
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">
-                        {{ field.label }}
-                        {% if field.field.required %}
-                            <span style="color: #e53e3e;">*</span>
-                        {% endif %}
-                    </label>
-                    <div class="input-group">
-                        {% if field.name == 'username' %}
-                            <i class="fas fa-user"></i>
-                        {% elif field.name == 'password' %}
-                            <i class="fas fa-lock"></i>
-                        {% endif %}
-                        {{ field }}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="error-message">
+                        {{ message }}
                     </div>
-                    {% if field.errors %}
-                        <div class="errorlist">
-                            {% for error in field.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                    {% if field.help_text %}
-                        <small style="color: #718096; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                            {{ field.help_text }}
-                        </small>
-                    {% endif %}
-                </div>
-            {% endfor %}
-            
-            <button type="submit">
-                <i class="fas fa-sign-in-alt"></i>
-                Login to Buidimty
-            </button>
-        </form>
-        
-        <div class="links">
-            <p>
-                <i class="fas fa-user-plus"></i>
-                <a href="/signup/client/">Sign up as Client</a>
-            </p>
-            <p>
-                <i class="fas fa-tools"></i>
-                <a href="/signup/provider/">Sign up as Service Provider</a>
-            </p>
-        </div>
-        
-        <!-- Optional: Demo credentials for testing -->
-        {% if debug %}
-        <div class="demo-credentials">
-            <p><i class="fas fa-info-circle"></i> Demo Credentials:</p>
-            <code>Client: client / client123</code>
-            <code>Provider: provider / provider123</code>
-        </div>
-        {% endif %}
-    </div>
+                {% endfor %}
+            {% endif %}
 
-    <script>
-        // Add floating label effect (optional)
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.01)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-        });
-    </script>
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Enter your username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+
+            <div class="links">
+                <p>Don't have an account? <a href="{% url 'signup_client' %}">Sign up as Client</a></p>
+                <p>Want to offer services? <a href="{% url 'signup_provider' %}">Become a Provider</a></p>
+                <p><a href="/">← Back to Home</a></p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

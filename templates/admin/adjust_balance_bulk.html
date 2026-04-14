@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ title }}</h1>
+    <div class="card">
+        <div class="card-body">
+            <p>Adjusting balance for <strong>{{ users.count }}</strong> user(s):</p>
+            <ul>
+                {% for user in users %}
+                <li>{{ user.username }} (Current: ${{ user.account_balance }})</li>
+                {% endfor %}
+            </ul>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Operation:</label>
+                    <select name="operation" class="form-control">
+                        <option value="add">Add to balance</option>
+                        <option value="subtract">Subtract from balance</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" name="amount" step="0.01" class="form-control" required>
+                </div>
+                <button type="submit" name="apply" class="btn btn-primary">Apply to all</button>
+                <a href="{% url 'admin:users_user_changelist' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

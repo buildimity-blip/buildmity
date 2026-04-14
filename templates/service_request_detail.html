@@ -1,0 +1,307 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Request Details | Buildimity</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-accepted, .status-agreed { background: #dbeafe; color: #1e40af; }
+        .status-negotiating { background: #fef3c7; color: #92400e; }
+        .status-paid { background: #d1fae5; color: #065f46; }
+        .status-in_progress { background: #ede9fe; color: #6d28d9; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-cancelled, .status-rejected { background: #fee2e2; color: #991b1b; }
+
+        .info-row {
+            margin: 12px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-row strong {
+            color: #555;
+            width: 140px;
+            display: inline-block;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .rating-display {
+            background: #fff9c4;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-outline { background: white; color: #667eea; border: 2px solid #667eea; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .info-row strong {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Service Request Details</h1>
+            <p>Track your request status and negotiations</p>
+        </div>
+
+        <!-- Request Details Card -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                <h2 style="color: #1a1a2e;">Request #{{ service_request.id }}</h2>
+                <span class="status-badge status-{{ service_request.status }}">{{ service_request.status|title }}</span>
+            </div>
+
+            <div class="info-row">
+                <strong>🔧 Service:</strong> 
+                {% if service_request.service %}
+                    {{ service_request.service.name }}
+                {% elif service_request.service_need %}
+                    {{ service_request.service_need.service_display }}
+                {% else %}
+                    Not specified
+                {% endif %}
+            </div>
+
+            <div class="info-row">
+                <strong>👤 Client:</strong> {{ service_request.client.username }}
+            </div>
+
+            <div class="info-row">
+                <strong>👨‍🔧 Provider:</strong> {{ service_request.provider.username }}
+            </div>
+
+            <div class="info-row">
+                <strong>💬 Message:</strong> {{ service_request.message|default:"No message" }}
+            </div>
+
+            {% if service_request.amount %}
+                <div class="info-row">
+                    <strong>💰 Amount:</strong> UGX {{ service_request.amount|floatformat:0 }}
+                </div>
+                <div class="info-row">
+                    <strong>🏦 Commission (10%):</strong> UGX {{ service_request.commission|floatformat:0 }}
+                </div>
+                <div class="info-row">
+                    <strong>💵 Provider Gets:</strong> UGX {{ service_request.provider_amount|floatformat:0 }}
+                </div>
+            {% endif %}
+
+            <div class="info-row">
+                <strong>📅 Created:</strong> {{ service_request.created_at|date:"M d, Y H:i" }}
+            </div>
+
+            {% if service_request.accepted_at %}
+                <div class="info-row">
+                    <strong>✅ Accepted:</strong> {{ service_request.accepted_at|date:"M d, Y H:i" }}
+                </div>
+            {% endif %}
+
+            {% if service_request.completed_at %}
+                <div class="info-row">
+                    <strong>🎉 Completed:</strong> {{ service_request.completed_at|date:"M d, Y H:i" }}
+                </div>
+            {% endif %}
+
+            <!-- Rating Display -->
+            {% if service_request.rating %}
+                <div class="rating-display">
+                    <strong>⭐ Your Rating:</strong>
+                    <div class="stars">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= service_request.rating.rating %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                        ({{ service_request.rating.rating }}/5)
+                    </div>
+                    {% if service_request.rating.review %}
+                        <div style="margin-top: 10px;">
+                            <strong>Review:</strong> "{{ service_request.rating.review }}"
+                        </div>
+                    {% endif %}
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        Rated on {{ service_request.rating.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons - PAYMENT BUTTON INCLUDED -->
+            <div style="margin-top: 20px;">
+                {% if request.user == service_request.client %}
+                    {% if service_request.status == 'pending' or service_request.status == 'negotiating' %}
+                        <a href="{% url 'negotiation_room' service_request.id %}" class="btn btn-primary">💬 Negotiate</a>
+                    {% endif %}
+                    
+                    <!-- PAYMENT BUTTON - This appears when status is accepted -->
+                    {% if service_request.status == 'accepted' or service_request.status == 'agreed' %}
+                        <a href="{% url 'make_payment' service_request.id %}" class="btn btn-success" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);">
+                            <i class="fas fa-mobile-alt"></i> Pay with Mobile Money
+                        </a>
+                    {% endif %}
+                    
+                    {% if service_request.status == 'paid' %}
+                        <a href="{% url 'release_payment' service_request.id %}" class="btn btn-primary">✅ Release Payment</a>
+                    {% endif %}
+                    
+                    {% if service_request.status == 'in_progress' %}
+                        <a href="{% url 'confirm_completion' service_request.id %}" class="btn btn-success">✅ Mark as Complete</a>
+                    {% endif %}
+                    
+                    {% if service_request.status == 'completed' and not service_request.rating %}
+                        <a href="{% url 'rate_provider' service_request.id %}" class="btn btn-warning">⭐ Rate Provider</a>
+                    {% endif %}
+                {% endif %}
+
+                {% if request.user == service_request.provider %}
+                    {% if service_request.status == 'pending' %}
+                        <a href="{% url 'update_request_status' service_request.id 'accepted' %}" class="btn btn-success">✓ Accept</a>
+                        <a href="{% url 'update_request_status' service_request.id 'rejected' %}" class="btn btn-danger">✗ Reject</a>
+                    {% endif %}
+                    
+                    {% if service_request.status == 'accepted' or service_request.status == 'paid' %}
+                        <a href="{% url 'update_request_status' service_request.id 'in_progress' %}" class="btn btn-warning">▶ Start Work</a>
+                    {% endif %}
+                    
+                    {% if service_request.status == 'in_progress' %}
+                        <a href="{% url 'provider_confirm_completion' service_request.id %}" class="btn btn-success">✅ Mark Complete</a>
+                    {% endif %}
+                    
+                    <a href="{% url 'negotiation_room' service_request.id %}" class="btn btn-primary">💬 Negotiate</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Negotiations Card -->
+        <div class="card">
+            <div class="section-title">💬 Negotiation History</div>
+            
+            {% if negotiations %}
+                {% for negotiation in negotiations %}
+                    <div class="negotiation-item" style="padding: 15px; margin-bottom: 15px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+                        <div class="sender-name" style="font-weight: 700; color: #667eea; margin-bottom: 8px;">
+                            {% if negotiation.sender == service_request.client %}
+                                Client: {{ negotiation.sender.username }}
+                            {% else %}
+                                Provider: {{ negotiation.sender.username }}
+                            {% endif %}
+                        </div>
+                        
+                        {% if negotiation.message %}
+                            <div class="message-text" style="margin: 10px 0; color: #333;">{{ negotiation.message }}</div>
+                        {% endif %}
+                        
+                        {% if negotiation.proposed_price %}
+                            <div class="price-proposed" style="display: inline-block; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-top: 8px;">
+                                Proposed Price: UGX {{ negotiation.proposed_price|floatformat:0 }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="timestamp" style="font-size: 12px; color: #999; margin-top: 8px;">{{ negotiation.created_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: #666; text-align: center; padding: 20px;">No negotiations yet.</p>
+            {% endif %}
+            
+            <div style="margin-top: 20px;">
+                <a href="{% url 'negotiation_room' service_request.id %}" class="btn btn-primary">Start Negotiation</a>
+            </div>
+        </div>
+
+        <a href="javascript:history.back()" class="back-link">← Back</a>
+    </div>
+</body>
+</html>

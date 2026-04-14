@@ -1,10 +1,10 @@
 from decimal import Decimal
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
 class Service(models.Model):
+    """Service categories - providers choose from these"""
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -12,6 +12,9 @@ class Service(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['name']
 
 
 class User(AbstractUser):
@@ -56,6 +59,10 @@ class User(AbstractUser):
     )
     mobile_money_number = models.CharField(max_length=20, blank=True)
     account_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Rating fields
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0, null=True, blank=True)
+    total_ratings = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -352,3 +359,216 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for request #{self.service_request.id} - {self.status}"
+
+
+class SuggestedService(models.Model):
+    """When providers add new services not in list - automatically approved"""
+    name = models.CharField(max_length=100, unique=True)
+    suggested_by = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='suggested_services'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.name} (suggested by {self.suggested_by.username})"
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Rating(models.Model):
+    """Client ratings for providers after job completion"""
+    
+    RATING_CHOICES = [
+        (1, '⭐ 1 - Poor'),
+        (2, '⭐⭐ 2 - Fair'),
+        (3, '⭐⭐⭐ 3 - Good'),
+        (4, '⭐⭐⭐⭐ 4 - Very Good'),
+        (5, '⭐⭐⭐⭐⭐ 5 - Excellent'),
+    ]
+    
+    service_request = models.OneToOneField(
+        ServiceRequest,
+        on_delete=models.CASCADE,
+        related_name='rating'
+    )
+    provider = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='received_ratings'
+    )
+    client = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='given_ratings'
+    )
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    review = models.TextField(blank=True, help_text="Write your experience with this provider")
+    is_approved = models.BooleanField(default=True, help_text="Admin can hide inappropriate reviews")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.client.username} rated {self.provider.username}: {self.rating} stars"
+    
+    @property
+    def rating_percentage(self):
+        return (self.rating / 5) * 100
+
+
+class JobCompletion(models.Model):
+    """Track when client confirms job completion"""
+    
+    service_request = models.OneToOneField(
+        ServiceRequest,
+        on_delete=models.CASCADE,
+        related_name='completion'
+    )
+    client_confirmed = models.BooleanField(default=False)
+    client_confirmed_at = models.DateTimeField(null=True, blank=True)
+    provider_confirmed = models.BooleanField(default=False)
+    provider_confirmed_at = models.DateTimeField(null=True, blank=True)
+    client_feedback = models.TextField(blank=True)
+    completed_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Completion for request #{self.service_request.id}"
+    
+    # ==================== HOMEPAGE CMS MODELS ====================
+
+class HomepageSettings(models.Model):
+    """Main homepage settings that admin can edit"""
+    
+    # Hero Section
+    hero_title = models.CharField(max_length=200, default='Find Trusted Service Providers Near You')
+    hero_subtitle = models.TextField(default='Connect with verified professionals for plumbing, electrical, cleaning, and more. Get quality service at fair prices.')
+    hero_background_image = models.ImageField(upload_to='homepage/hero/', blank=True, null=True)
+    hero_background_color = models.CharField(max_length=20, default='#2563eb', help_text='Hex color code')
+    
+    # Stats Section
+    stats_visible = models.BooleanField(default=True)
+    stats_background_color = models.CharField(max_length=20, default='#ffffff', blank=True)
+    
+    # Services Section
+    services_title = models.CharField(max_length=200, default='Popular Services')
+    services_subtitle = models.CharField(max_length=500, default='', blank=True)
+    services_visible = models.BooleanField(default=True)
+    
+    # How It Works Section
+    how_it_works_title = models.CharField(max_length=200, default='How It Works')
+    how_it_works_visible = models.BooleanField(default=True)
+    
+    # Testimonials Section
+    testimonials_title = models.CharField(max_length=200, default='What Our Customers Say')
+    testimonials_visible = models.BooleanField(default=True)
+    
+    # CTA Section
+    cta_title = models.CharField(max_length=200, default='Ready to Get Started?')
+    cta_subtitle = models.CharField(max_length=500, default='Join thousands of satisfied customers and trusted providers')
+    cta_button1_text = models.CharField(max_length=50, default='I Need a Service')
+    cta_button2_text = models.CharField(max_length=50, default='Become a Provider')
+    cta_visible = models.BooleanField(default=True)
+    
+    # Footer
+    footer_copyright = models.CharField(max_length=200, default='© 2024 Buildimity. All rights reserved.')
+    footer_email = models.EmailField(default='support@buildimity.com')
+    footer_phone = models.CharField(max_length=50, default='+256 123 456 789')
+    
+    # SEO
+    meta_description = models.TextField(default='Find trusted service providers in Uganda. Plumbing, electrical, cleaning, and more. Connect with verified professionals on Buildimity.', max_length=500)
+    meta_keywords = models.CharField(max_length=500, default='service providers, plumbing, electrical, cleaning, home services, Uganda, Kampala')
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Homepage Settings"
+    
+    def __str__(self):
+        return "Homepage Settings"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and HomepageSettings.objects.exists():
+            return  # Don't create duplicate
+        super().save(*args, **kwargs)
+
+
+class ServiceCard(models.Model):
+    """Custom service cards for the homepage"""
+    
+    service = models.ForeignKey('Service', on_delete=models.CASCADE, null=True, blank=True)
+    custom_name = models.CharField(max_length=100, blank=True, help_text="Leave blank to use service name")
+    icon = models.CharField(max_length=50, default='fa-wrench', help_text='Font Awesome icon class')
+    description = models.CharField(max_length=200, blank=True)
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return self.display_name
+    
+    @property
+    def display_name(self):
+        if self.custom_name:
+            return self.custom_name
+        return self.service.name if self.service else 'Custom Service'
+
+
+class Testimonial(models.Model):
+    """Customer testimonials for homepage"""
+    
+    author_name = models.CharField(max_length=100)
+    author_location = models.CharField(max_length=100, blank=True)
+    content = models.TextField()
+    rating = models.IntegerField(default=5, choices=[(1,1),(2,2),(3,3),(4,4),(5,5)])
+    is_active = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['order']
+    
+    def __str__(self):
+        return f"{self.author_name} - {self.author_location}"
+
+
+class HomepageImage(models.Model):
+    """Images for homepage banners and backgrounds"""
+    
+    SECTION_CHOICES = [
+        ('hero', 'Hero Background'),
+        ('services', 'Services Background'),
+        ('testimonials', 'Testimonials Background'),
+        ('cta', 'CTA Background'),
+    ]
+    
+    section = models.CharField(max_length=50, choices=SECTION_CHOICES)
+    image = models.ImageField(upload_to='homepage/')
+    alt_text = models.CharField(max_length=200, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.get_section_display()}: {self.image.name}"
+
+
+class IPWhitelistConfig(models.Model):
+    """Store IP whitelist configuration in database"""
+    service = models.CharField(max_length=50)
+    environment = models.CharField(max_length=20)
+    ip_address = models.GenericIPAddressField()
+    description = models.CharField(max_length=200, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['service', 'environment', 'ip_address']
+    
+    def __str__(self):
+        return f"{self.service} - {self.environment}: {self.ip_address}"
