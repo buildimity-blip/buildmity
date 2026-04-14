@@ -97,13 +97,11 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-import dj_database_url
-
 DATABASES = {
-    'default': dj_database_url.parse(
-        "postgresql://postgres:VuoenCfAicFsXMmRPiSGSmvMuTmnTHMP@interchange.proxy.rlwy.net:37163/railway",
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=True
+        ssl_require=False,
     )
 }
 
