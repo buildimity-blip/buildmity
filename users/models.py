@@ -572,3 +572,92 @@ class IPWhitelistConfig(models.Model):
     
     def __str__(self):
         return f"{self.service} - {self.environment}: {self.ip_address}"
+
+
+class Dispute(models.Model):
+    """Dispute resolution for service requests"""
+    
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('under_review', 'Under Review'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed'),
+        ('escalated', 'Escalated'),
+    ]
+    
+    RESOLUTION_CHOICES = [
+        ('refund_client', 'Refund Client'),
+        ('release_to_provider', 'Release to Provider'),
+        ('partial_refund', 'Partial Refund'),
+        ('no_action', 'No Action'),
+    ]
+    
+    service_request = models.OneToOneField(
+        'ServiceRequest',
+        on_delete=models.CASCADE,
+        related_name='dispute'
+    )
+    raised_by = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='raised_disputes'
+    )
+    reason = models.TextField()
+    description = models.TextField()
+    evidence_images = models.ImageField(upload_to='disputes/evidence/', blank=True, null=True)
+    evidence_documents = models.FileField(upload_to='disputes/documents/', blank=True, null=True)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    resolution = models.CharField(max_length=20, choices=RESOLUTION_CHOICES, blank=True, null=True)
+    resolution_notes = models.TextField(blank=True)
+    
+    admin_notes = models.TextField(blank=True)
+    resolved_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_disputes')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Dispute for Request #{self.service_request.id} - {self.status}"
+
+
+class DisputeMessage(models.Model):
+    """Messages within a dispute"""
+    dispute = models.ForeignKey(Dispute, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey('User', on_delete=models.CASCADE, related_name='dispute_messages')
+    message = models.TextField()
+    attachment = models.FileField(upload_to='disputes/messages/', blank=True, null=True)
+    is_admin_message = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Message from {self.sender.username} - {self.created_at}"
+
+
+class ServiceChecklist(models.Model):
+    """Checklist items for service completion"""
+    service_request = models.ForeignKey('ServiceRequest', on_delete=models.CASCADE, related_name='checklist_items')
+    item_name = models.CharField(max_length=200)
+    is_completed = models.BooleanField(default=False)
+    completed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='completed_checklist_items')
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.item_name} - {'✓' if self.is_completed else '○'}"
+
+
+class CompletionPhoto(models.Model):
+    """Photos uploaded during service completion"""
+    service_request = models.ForeignKey('ServiceRequest', on_delete=models.CASCADE, related_name='completion_photos')
+    image = models.ImageField(upload_to='completion_photos/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_by = models.ForeignKey('User', on_delete=models.CASCADE, related_name='uploaded_completion_photos')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Photo for Request #{self.service_request.id}"

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Service Marketplace</title>
+    <title>Dashboard | Buildimity</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -109,44 +109,36 @@
             background: var(--primary);
             color: white;
         }
-
         .btn-primary:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
-
         .btn-success {
             background: var(--success);
             color: white;
         }
-
         .btn-success:hover {
             background: #15803d;
             transform: translateY(-2px);
         }
-
         .btn-warning {
             background: var(--warning);
             color: white;
         }
-
         .btn-danger {
             background: var(--danger);
             color: white;
         }
-
         .btn-outline {
             background: white;
             color: var(--secondary);
             border: 1px solid var(--border);
         }
-
         .btn-outline:hover {
             background: #f1f5f9;
             transform: translateY(-2px);
         }
-
         .btn-sm {
             padding: 7px 12px;
             font-size: 0.8rem;
@@ -253,7 +245,7 @@
         }
 
         .stats-grid {
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             margin-bottom: 24px;
         }
 
@@ -380,36 +372,12 @@
             font-weight: 700;
             text-transform: capitalize;
         }
-
-        .badge-open, .badge-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-matched, .badge-negotiating {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .badge-accepted, .badge-agreed, .badge-paid {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-in_progress {
-            background: #ede9fe;
-            color: #6d28d9;
-        }
-
-        .badge-completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .badge-rejected, .badge-cancelled {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-accepted { background: #dbeafe; color: #1e40af; }
+        .badge-paid { background: #d1fae5; color: #065f46; }
+        .badge-held { background: #fef3c7; color: #92400e; }
+        .badge-released { background: #dcfce7; color: #166534; }
+        .badge-completed { background: #d1fae5; color: #065f46; }
 
         .quick-links {
             display: grid;
@@ -442,20 +410,6 @@
             border-radius: 16px;
             color: var(--muted);
             background: #fafcff;
-        }
-
-        .payment-box {
-            border: 1px solid #bbf7d0;
-            background: #f0fdf4;
-            border-radius: 14px;
-            padding: 16px;
-            margin-top: 14px;
-        }
-
-        .payment-box h4 {
-            color: #166534;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
         }
 
         .images-grid {
@@ -497,24 +451,22 @@
             margin-top: 12px;
         }
 
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 18px 0;
-        }
-
         .service-clickable {
             cursor: pointer;
         }
-
         .service-clickable:hover {
             background: #eff6ff;
             border-color: var(--primary-light);
         }
 
+        .detail-row {
+            margin: 6px 0;
+            font-size: 0.85rem;
+        }
+
         @media (max-width: 1100px) {
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
             .main-grid {
                 grid-template-columns: 1fr;
@@ -526,7 +478,7 @@
                 padding: 16px;
             }
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
             .images-grid {
                 grid-template-columns: 1fr;
@@ -549,7 +501,7 @@
     <header class="topbar">
         <div class="topbar-inner">
             <div class="brand">
-                <h1><i class="fas fa-handshake"></i> ServiceMarket</h1>
+                <h1><i class="fas fa-handshake"></i> Buildimity</h1>
                 <p>Welcome back, {{ user.username }}!</p>
             </div>
             <div class="top-actions">
@@ -569,13 +521,11 @@
                         <i class="fas fa-user-edit"></i> Edit Profile
                     </a>
                 {% endif %}
-               <!-- DON'T use this (GET request) -->
-
-<!-- USE this (POST request with form) -->
-<form action="{% url 'logout' %}" method="post" style="display: inline;">
-    {% csrf_token %}
-    <button type="submit" style="background: none; border: none; color: inherit; cursor: pointer; font-family: inherit; font-size: inherit;">Logout</button>
-</form> 
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline">Logout</button>
+                </form>
+            </div>
         </div>
     </header>
 
@@ -588,7 +538,7 @@
             {% endfor %}
         {% endif %}
 
-        <!-- CLIENT DASHBOARD -->
+        <!-- ==================== CLIENT DASHBOARD ==================== -->
         {% if user.role == 'client' %}
             <div class="hero">
                 <div class="hero-content">
@@ -610,27 +560,37 @@
                 </form>
             </div>
 
-            <!-- Stats Grid -->
+            <!-- Stats Grid with Payment Stats -->
             <div class="grid stats-grid">
                 <div class="card stat-card">
                     <h3><i class="fas fa-tasks"></i> Total Requests</h3>
                     <div class="stat-value">{{ total_requests|default:0 }}</div>
-                    <div class="stat-note">All service requests created</div>
+                    <div class="stat-note">All service requests</div>
                 </div>
                 <div class="card stat-card">
                     <h3><i class="fas fa-clock"></i> Pending</h3>
                     <div class="stat-value">{{ pending_requests|default:0 }}</div>
-                    <div class="stat-note">Waiting for provider response</div>
+                    <div class="stat-note">Waiting for provider</div>
                 </div>
                 <div class="card stat-card">
                     <h3><i class="fas fa-check-circle"></i> Accepted</h3>
                     <div class="stat-value">{{ accepted_requests|default:0 }}</div>
-                    <div class="stat-note">Ready for payment or work</div>
+                    <div class="stat-note">Ready for payment</div>
                 </div>
                 <div class="card stat-card">
-                    <h3><i class="fas fa-chart-line"></i> Active/Completed</h3>
-                    <div class="stat-value">{{ negotiating_requests|default:0 }}/{{ completed_requests|default:0 }}</div>
-                    <div class="stat-note">Negotiations / Finished jobs</div>
+                    <h3><i class="fas fa-chart-line"></i> Completed</h3>
+                    <div class="stat-value">{{ completed_requests|default:0 }}</div>
+                    <div class="stat-note">Finished jobs</div>
+                </div>
+                <div class="card stat-card">
+                    <h3><i class="fas fa-credit-card"></i> Total Spent</h3>
+                    <div class="stat-value">UGX {{ total_spent|default:0|floatformat:0 }}</div>
+                    <div class="stat-note">All payments made</div>
+                </div>
+                <div class="card stat-card">
+                    <h3><i class="fas fa-wallet"></i> Pending Release</h3>
+                    <div class="stat-value">{{ pending_payments_count|default:0 }}</div>
+                    <div class="stat-note">Payments awaiting release</div>
                 </div>
             </div>
 
@@ -668,7 +628,7 @@
                                                     • <i class="fas fa-calendar"></i> {{ need.created_at|date:"M d, Y" }}
                                                 </div>
                                             </div>
-                                            <span class="badge badge-{{ need.status|default:'open'|slugify }}">{{ need.status|default:"Open" }}</span>
+                                            <span class="badge badge-pending">{{ need.status|default:"Open" }}</span>
                                         </div>
                                         {% if need.description %}
                                             <div class="item-desc">{{ need.description|truncatechars:120 }}</div>
@@ -717,7 +677,7 @@
                                                     • <i class="fas fa-clock"></i> {{ req.created_at|date:"M d, Y" }}
                                                 </div>
                                             </div>
-                                            <span class="badge badge-{{ req.status|slugify }}">{{ req.status }}</span>
+                                            <span class="badge badge-{{ req.status }}">{{ req.status }}</span>
                                         </div>
                                         {% if req.message %}
                                             <div class="item-desc">{{ req.message|truncatechars:100 }}</div>
@@ -731,7 +691,7 @@
                                             </a>
                                             {% if req.status == 'accepted' or req.status == 'agreed' %}
                                                 <a href="{% url 'make_payment' req.id %}" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-credit-card"></i> Pay Now
+                                                    <i class="fas fa-mobile-alt"></i> Pay Now
                                                 </a>
                                             {% endif %}
                                             {% if req.status == 'paid' %}
@@ -747,6 +707,57 @@
                             <div class="empty-state">
                                 <p><i class="fas fa-comment-slash"></i> No active requests.</p>
                                 <a href="{% url 'search_providers' %}" class="btn btn-primary" style="margin-top: 12px;">Find Providers to Start</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Payment History Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title"><i class="fas fa-credit-card"></i> Payment History</div>
+                                <div class="card-subtitle">Track your payments and transactions</div>
+                            </div>
+                        </div>
+                        {% if payments %}
+                            <div class="item-list">
+                                {% for payment in payments %}
+                                    <div class="item">
+                                        <div class="item-top">
+                                            <div>
+                                                <div class="item-title">
+                                                    Payment for Request #{{ payment.service_request.id }}
+                                                </div>
+                                                <div class="item-meta">
+                                                    <i class="fas fa-user"></i> Provider: {{ payment.provider.username }}
+                                                    • <i class="fas fa-calendar"></i> {{ payment.created_at|date:"M d, Y" }}
+                                                </div>
+                                            </div>
+                                            <span class="badge badge-{{ payment.status }}">{{ payment.status }}</span>
+                                        </div>
+                                        <div class="detail-row"><strong>Amount:</strong> UGX {{ payment.amount|floatformat:0 }}</div>
+                                        <div class="detail-row"><strong>Method:</strong> {{ payment.method|upper }}</div>
+                                        <div class="detail-row"><strong>Transaction ID:</strong> {{ payment.transaction_id|default:"Pending" }}</div>
+                                        {% if payment.paid_at %}
+                                            <div class="detail-row"><strong>Paid On:</strong> {{ payment.paid_at|date:"M d, Y H:i" }}</div>
+                                        {% endif %}
+                                        <div class="item-actions">
+                                            <a href="{% url 'service_request_detail' payment.service_request.id %}" class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i> View Request
+                                            </a>
+                                            {% if payment.status == 'paid' %}
+                                                <a href="{% url 'release_payment' payment.service_request.id %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check-double"></i> Release Payment
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <p><i class="fas fa-credit-card"></i> No payment history yet.</p>
+                                <a href="{% url 'search_providers' %}" class="btn btn-primary" style="margin-top: 12px;">Make Your First Payment</a>
                             </div>
                         {% endif %}
                     </div>
@@ -776,6 +787,10 @@
                             </a>
                             <a href="{% url 'all_services' %}" class="quick-link">
                                 <span><i class="fas fa-tags"></i> Browse All Services</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a href="{% url 'my_referrals' %}" class="quick-link">
+                                <span><i class="fas fa-gift"></i> Invite Friends & Earn</span>
                                 <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
@@ -834,7 +849,7 @@
                 </div>
             </div>
 
-        <!-- PROVIDER DASHBOARD -->
+        <!-- ==================== PROVIDER DASHBOARD ==================== -->
         {% elif user.role == 'provider' %}
             <div class="hero">
                 <div class="hero-content">
@@ -853,12 +868,11 @@
                     <div class="stat-value">{{ total_requests|default:0 }}</div>
                     <div class="stat-note">All client requests</div>
                 </div>
-                <!-- Add to provider stats -->
-<div class="card stat-card">
-    <h3>⭐ Average Rating</h3>
-    <div class="stat-value">{{ user.average_rating|default:"0.0" }}</div>
-    <div class="stat-note">From {{ user.total_ratings }} review(s)</div>
-</div>
+                <div class="card stat-card">
+                    <h3>⭐ Average Rating</h3>
+                    <div class="stat-value">{{ user.average_rating|default:"0.0" }}</div>
+                    <div class="stat-note">From {{ user.total_ratings }} review(s)</div>
+                </div>
                 <div class="card stat-card">
                     <h3><i class="fas fa-hourglass-half"></i> Pending</h3>
                     <div class="stat-value">{{ pending_requests|default:0 }}</div>
@@ -907,7 +921,7 @@
                                                     • <i class="fas fa-clock"></i> {{ req.created_at|date:"M d, Y" }}
                                                 </div>
                                             </div>
-                                            <span class="badge badge-{{ req.status|slugify }}">{{ req.status }}</span>
+                                            <span class="badge badge-{{ req.status }}">{{ req.status }}</span>
                                         </div>
                                         {% if req.message %}
                                             <div class="item-desc">{{ req.message|truncatechars:100 }}</div>
@@ -918,7 +932,7 @@
                                             </a>
                                             {% if req.status == 'pending' %}
                                                 <a href="{% url 'update_request_status' req.id 'accepted' %}" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-check"></i> Accept
+                                                    <i class="fas fa-check"></i> Accept Job
                                                 </a>
                                                 <a href="{% url 'update_request_status' req.id 'rejected' %}" class="btn btn-danger btn-sm">
                                                     <i class="fas fa-times"></i> Reject
@@ -929,15 +943,20 @@
                                                     <i class="fas fa-play"></i> Start Work
                                                 </a>
                                             {% endif %}
-                                            {% if req.status == 'in_progress' or req.status == 'negotiating' %}
-                                                <a href="{% url 'update_request_status' req.id 'completed' %}" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-check-double"></i> Complete
+                                            {% if req.status == 'in_progress' %}
+                                                <a href="{% url 'provider_confirm_completion' req.id %}" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check-double"></i> Mark Complete
                                                 </a>
                                             {% endif %}
                                             <a href="{% url 'negotiation_room' req.id %}" class="btn btn-primary btn-sm">
                                                 <i class="fas fa-comment-dollar"></i> Negotiate
                                             </a>
                                         </div>
+                                        {% if req.status == 'accepted' %}
+                                            <div class="payment-box" style="background: #fef3c7; margin-top: 10px; padding: 12px; border-radius: 10px;">
+                                                <i class="fas fa-clock"></i> ⏳ Waiting for client payment...
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 {% endfor %}
                             </div>
@@ -986,21 +1005,37 @@
                 <div class="section-stack">
                     <div class="card earnings-card">
                         <div class="card-title"><i class="fas fa-money-bill-wave"></i> Total Earnings</div>
-                        <div class="card-subtitle">From completed work</div>
-                        <div class="earnings-amount">UGX {{ total_earnings|default:"0"|floatformat:2 }}</div>
+                        <div class="earnings-amount">UGX {{ total_earnings|default:"0"|floatformat:0 }}</div>
                         <div class="stat-note" style="margin-top: 8px;">Keep delivering quality work to grow your revenue.</div>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
                             <div>
+                                <div class="card-title"><i class="fas fa-star"></i> Your Rating</div>
+                            </div>
+                        </div>
+                        <div class="quick-links">
+                            <div class="quick-link">
+                                <span><i class="fas fa-star" style="color:#ffc107;"></i> Average: <strong>{{ user.average_rating|default:"0.0" }}/5.0</strong></span>
+                                <span>{{ user.total_ratings }} review(s)</span>
+                            </div>
+                            <a href="{% url 'provider_ratings' user.id %}" class="quick-link">
+                                <span><i class="fas fa-comments"></i> View All Reviews</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
                                 <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
-                                <div class="card-subtitle">Manage your business</div>
                             </div>
                         </div>
                         <div class="quick-links">
                             <a href="{% url 'upload_work_image' %}" class="quick-link">
-                                <span><i class="fas fa-camera"></i> Upload Work Image</span>
+                                <span><i class="fas fa-camera"></i> Upload Work</span>
                                 <i class="fas fa-arrow-right"></i>
                             </a>
                             <a href="{% url 'provider_requests' %}" class="quick-link">
@@ -1016,7 +1051,7 @@
                 </div>
             </div>
 
-        <!-- ADMIN DASHBOARD -->
+        <!-- ==================== ADMIN DASHBOARD ==================== -->
         {% elif user.role == 'admin' %}
             <div class="hero">
                 <div class="hero-content">
@@ -1059,7 +1094,6 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Add click animation to buttons
         document.querySelectorAll(".btn").forEach(btn => {
             btn.addEventListener("click", function(e) {
                 this.style.transform = "scale(0.96)";

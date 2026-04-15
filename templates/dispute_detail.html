@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispute Details | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            padding: 40px 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-open { background: #fee2e2; color: #991b1b; }
+        .status-under_review { background: #fef3c7; color: #92400e; }
+        .status-resolved { background: #dcfce7; color: #166534; }
+        
+        .message {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .admin-message { background: #e0e7ff; border-left: 4px solid #2563eb; }
+        .message-header { font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .message-text { color: #334155; line-height: 1.5; }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-outline { background: white; color: #2563eb; border: 1px solid #e2e8f0; }
+        
+        textarea, select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1><i class="fas fa-gavel"></i> Dispute #{{ dispute.id }}</h1>
+                <span class="status-badge status-{{ dispute.status }}">{{ dispute.status|title }}</span>
+            </div>
+            <div class="subtitle">Request #{{ service_request.id }} - {{ service_request.service.name|default:"Service Request" }}</div>
+
+            <div style="background: #fef3c7; padding: 16px; border-radius: 12px; margin: 16px 0;">
+                <strong>Reason:</strong> {{ dispute.reason }}<br>
+                <strong>Raised by:</strong> {{ dispute.raised_by.username }} on {{ dispute.created_at|date:"M d, Y H:i" }}
+            </div>
+
+            <p><strong>Description:</strong></p>
+            <p style="margin-top: 8px;">{{ dispute.description }}</p>
+
+            {% if dispute.evidence_images %}
+            <div style="margin-top: 16px;">
+                <strong>Evidence Image:</strong>
+                <img src="{{ dispute.evidence_images.url }}" style="max-width: 100%; border-radius: 12px; margin-top: 8px;">
+            </div>
+            {% endif %}
+
+            <!-- Messages -->
+            <h3 style="margin: 24px 0 16px;"><i class="fas fa-comments"></i> Discussion</h3>
+            {% for msg in messages %}
+            <div class="message {% if msg.is_admin_message %}admin-message{% endif %}">
+                <div class="message-header">
+                    <span>{{ msg.sender.username }} {% if msg.is_admin_message %}(Admin){% endif %}</span>
+                    <span style="font-size: 12px; color: #64748b;">{{ msg.created_at|date:"M d, H:i" }}</span>
+                </div>
+                <div class="message-text">{{ msg.message }}</div>
+            </div>
+            {% endfor %}
+
+            <!-- Add Message -->
+            <form method="post" style="margin-top: 20px;">
+                {% csrf_token %}
+                <textarea name="message" rows="3" placeholder="Type your message..." style="margin-bottom: 12px;"></textarea>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+            </form>
+
+            <!-- Admin Resolution Form -->
+            {% if is_admin and dispute.status != 'resolved' and dispute.status != 'closed' %}
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
+                <h3><i class="fas fa-gavel"></i> Admin Resolution</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 12px;">
+                        <label>Resolution Status</label>
+                        <select name="status" required>
+                            <option value="open">Open</option>
+                            <option value="under_review">Under Review</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label>Resolution Action</label>
+                        <select name="resolution">
+                            <option value="">Select action</option>
+                            <option value="refund_client">Refund Client</option>
+                            <option value="release_to_provider">Release to Provider</option>
+                            <option value="partial_refund">Partial Refund</option>
+                            <option value="no_action">No Action</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label>Resolution Notes</label>
+                        <textarea name="resolution_notes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" name="resolve" class="btn btn-success"><i class="fas fa-check-circle"></i> Resolve Dispute</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="{% url 'service_request_detail' service_request.id %}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Request</a>
+    </div>
+</body>
+</html>

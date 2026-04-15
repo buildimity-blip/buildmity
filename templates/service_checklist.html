@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Completion Checklist | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            padding: 40px 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .subtitle { color: #64748b; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0; }
+        
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(135deg, #10b981, #059669);
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+        .checklist-item.completed {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        .checklist-item input { width: 24px; height: 24px; cursor: pointer; }
+        .checklist-item label { flex: 1; font-weight: 500; cursor: pointer; }
+        .checklist-item.completed label { text-decoration: line-through; color: #64748b; }
+        .checklist-meta { font-size: 12px; color: #10b981; margin-top: 4px; }
+        
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .photo-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .photo-card img { width: 100%; height: 150px; object-fit: cover; }
+        .photo-card .caption { padding: 8px; font-size: 12px; color: #64748b; text-align: center; }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-outline { background: white; color: #2563eb; border: 1px solid #e2e8f0; }
+        
+        .completion-badge {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1><i class="fas fa-clipboard-list"></i> Service Completion Checklist</h1>
+            <div class="subtitle">Request #{{ service_request.id }} - {{ service_request.service.name|default:service_request.service_need.service_display }}</div>
+
+            <!-- Progress -->
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ completion_percentage }}%"></div>
+            </div>
+            <p style="text-align: center; margin-bottom: 20px;">{{ completed_count }}/{{ total_count }} tasks completed</p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <h3><i class="fas fa-check-circle"></i> Completion Checklist</h3>
+                {% for item in checklist_items %}
+                <div class="checklist-item {% if item.is_completed %}completed{% endif %}">
+                    <input type="checkbox" name="item_{{ item.id }}" id="item_{{ item.id }}" 
+                           {% if item.is_completed %}checked{% endif %} 
+                           onchange="this.form.submit()">
+                    <label for="item_{{ item.id }}">{{ item.item_name }}</label>
+                    {% if item.is_completed %}
+                        <div class="checklist-meta">
+                            ✓ Completed by {{ item.completed_by.username }} on {{ item.completed_at|date:"M d, H:i" }}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <h3 style="margin-top: 24px;"><i class="fas fa-camera"></i> Completion Photos</h3>
+                <div class="photos-grid">
+                    {% for photo in completion_photos %}
+                    <div class="photo-card">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
+                        <div class="caption">{{ photo.caption|default:"No caption" }}<br><small>by {{ photo.uploaded_by.username }}</small></div>
+                    </div>
+                    {% empty %}
+                    <p style="color: #64748b;">No photos uploaded yet.</p>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label>Upload Completion Photo</label>
+                    <input type="file" name="completion_photo" accept="image/*" style="margin-top: 8px;">
+                    <input type="text" name="photo_caption" placeholder="Photo caption (optional)" style="margin-top: 8px; width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Progress</button>
+                    <a href="{% url 'service_request_detail' service_request.id %}" class="btn btn-outline">Back</a>
+                </div>
+            </form>
+
+            {% if all_completed %}
+            <div class="completion-badge">
+                <i class="fas fa-check-circle"></i> All tasks completed! Ready for final confirmation.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Auto-submit when checkbox is clicked
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        });
+    </script>
+</body>
+</html>

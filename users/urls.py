@@ -11,7 +11,10 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
     path('redirect-after-login/', views.redirect_after_login, name='redirect_after_login'),
-    
+    # Dispute URLs
+    path('raise-dispute/<int:request_id>/', views.raise_dispute, name='raise_dispute'),
+    path('dispute/<int:dispute_id>/', views.dispute_detail, name='dispute_detail'),
+    path('admin/disputes/', views.admin_disputes, name='admin_disputes'),
     # Search
     path('client-search/', views.client_search, name='client_search'),
     path('all-services/', views.all_services, name='all_services'),
@@ -58,4 +61,36 @@ urlpatterns = [
     
     # Other
     path('robots.txt/', views.robots_txt, name='robots_txt'),
+
+    # API URLs
+    path('api/', views.api_home, name='api_home'),
+    path('api/register/', views.api_register, name='api_register'),
+    path('api/profile/', views.api_profile, name='api_profile'),
+    path('api/services/', views.api_services, name='api_services'),
+    path('api/providers/', views.api_providers, name='api_providers'),
+    path('api/my-requests/', views.api_my_requests, name='api_my_requests'),
+    path('api/make-payment/<int:request_id>/', views.api_make_payment, name='api_make_payment'),
+
+    # Analytics
+    path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('export-report/<str:report_type>/', views.export_report, name='export_report'),
+# Service Checklist
+    path('service-checklist/<int:request_id>/', views.service_checklist, name='service_checklist'),
+    # Mobile App API URLs
+path('api/login/', views.api_login, name='api_login'),
+path('api/logout/', views.api_logout, name='api_logout'),
+path('api/register/', views.api_register, name='api_register'),
+path('api/profile/', views.api_profile, name='api_profile'),
+path('api/update-profile/', views.api_update_profile, name='api_update_profile'),
+path('api/services/', views.api_services, name='api_services'),
+path('api/providers/', views.api_providers, name='api_providers'),
+path('api/search-providers/', views.api_search_providers, name='api_search_providers'),
+path('api/provider/<int:provider_id>/', views.api_provider_detail, name='api_provider_detail'),
+path('api/my-requests/', views.api_my_requests, name='api_my_requests'),
+path('api/create-request/', views.api_create_service_request, name='api_create_service_request'),
+path('api/dashboard-stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
+path('api/notifications/', views.api_notifications, name='api_notifications'),
+path('my-referrals/', views.my_referrals, name='my_referrals'),
+path('api/mark-notification/<int:notification_id>/', views.api_mark_notification_read, name='api_mark_notification_read'),
+path('api/make-payment/<int:request_id>/', views.api_make_payment, name='api_make_payment'),
 ]

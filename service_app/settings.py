@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
    'django.contrib.sitemaps',
     'django.contrib.sites',
-
+    'rest_framework.authtoken',
     'rest_framework',
 
     'allauth',
@@ -52,7 +52,15 @@ INSTALLED_APPS = [
     'users',
     'jobs',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 # 🔁 MIDDLEWARE
 MIDDLEWARE = [
@@ -98,10 +106,10 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    'default': dj_database_url.config(
+        default='postgresql://postgres:VuoenCfAicFsXMmRPiSGSmvMuTmnTHMP@interchange.proxy.rlwy.net:37163/railway',
         conn_max_age=600,
-        ssl_require=False,
+        ssl_require=False
     )
 }
 
@@ -133,16 +141,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGOUT_REDIRECT_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirect-after-login/'
 
-# 📧 ALLAUTH SETTINGS
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_LOGIN_ON_GET = True
-
+# Social Login
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+            'key': ''
+        }
     }
 }
+
+LOGIN_REDIRECT_URL = '/redirect-after-login/'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 
 # 🔌 DRF (optional for later API use)

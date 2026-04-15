@@ -1069,6 +1069,12 @@ def admin_dashboard(request):
         'recent_images': recent_images,
         'recent_needs': recent_needs,
         'recent_notifications': recent_notifications,
+        'pending_providers': User.objects.filter(role='provider', is_verified=False)[:10],
+        'pending_payments': Payment.objects.filter(status='held')[:10],
+        'recent_users': User.objects.order_by('-date_joined')[:10],
+        'storage_usage': 45,
+        'active_sessions': 12,
+        'today_visitors': 0,
     }
 
     return render(request, 'admin_dashboard.html', context)
@@ -1130,3 +1136,698 @@ def suspend_user(request, user_id):
 
     messages.warning(request, f'{user_obj.username} suspended.')
     return redirect('admin_dashboard')
+
+# ==================== DISPUTE RESOLUTION ====================
+
+@login_required
+def raise_dispute(request, request_id):
+    """Client or provider raises a dispute"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id)
+    
+    if request.user not in [service_request.client, service_request.provider]:
+        messages.error(request, 'You cannot raise a dispute for this request.')
+        return redirect('service_request_detail', request_id=request_id)
+    
+    # Check if dispute already exists
+    if hasattr(service_request, 'dispute'):
+        messages.warning(request, 'A dispute already exists for this request.')
+        return redirect('dispute_detail', dispute_id=service_request.dispute.id)
+    
+    if request.method == 'POST':
+        dispute = Dispute.objects.create(
+            service_request=service_request,
+            raised_by=request.user,
+            reason=request.POST.get('reason'),
+            description=request.POST.get('description'),
+            evidence_images=request.FILES.get('evidence_images'),
+            evidence_documents=request.FILES.get('evidence_documents'),
+            status='open'
+        )
+        
+        # Create admin notification
+        AdminNotification.objects.create(
+            title=f'New Dispute Raised',
+            message=f'Dispute raised for request #{service_request.id} by {request.user.username}',
+            notification_type='general',
+            related_user=request.user
+        )
+        
+        messages.success(request, 'Dispute raised successfully. Admin will review shortly.')
+        return redirect('dispute_detail', dispute_id=dispute.id)
+    
+    return render(request, 'raise_dispute.html', {'service_request': service_request})
+
+
+@login_required
+def dispute_detail(request, dispute_id):
+    """View dispute details and messages"""
+    dispute = get_object_or_404(Dispute.objects.select_related('service_request', 'raised_by'), id=dispute_id)
+    service_request = dispute.service_request
+    
+    # Check permission
+    if request.user not in [service_request.client, service_request.provider] and not request.user.is_staff:
+        messages.error(request, 'You do not have permission to view this dispute.')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            DisputeMessage.objects.create(
+                dispute=dispute,
+                sender=request.user,
+                message=message,
+                is_admin_message=request.user.is_staff
+            )
+            messages.success(request, 'Message added to dispute.')
+        
+        # Admin resolution
+        if request.user.is_staff and request.POST.get('resolve'):
+            dispute.status = request.POST.get('status')
+            dispute.resolution = request.POST.get('resolution')
+            dispute.resolution_notes = request.POST.get('resolution_notes')
+            dispute.resolved_by = request.user
+            dispute.resolved_at = timezone.now()
+            dispute.save()
+            
+            # Handle resolution actions
+            if dispute.resolution == 'refund_client':
+                payment = service_request.payment
+                if payment:
+                    payment.status = 'refunded'
+                    payment.save()
+                    service_request.client.account_balance += payment.amount
+                    service_request.client.save()
+            elif dispute.resolution == 'release_to_provider':
+                payment = service_request.payment
+                if payment:
+                    payment.status = 'released'
+                    payment.save()
+                    service_request.provider.account_balance += payment.provider_amount
+                    service_request.provider.save()
+            
+            messages.success(request, 'Dispute resolved successfully.')
+        
+        return redirect('dispute_detail', dispute_id=dispute.id)
+    
+    messages_list = dispute.messages.all().order_by('created_at')
+    
+    return render(request, 'dispute_detail.html', {
+        'dispute': dispute,
+        'service_request': service_request,
+        'messages': messages_list,
+        'is_admin': request.user.is_staff,
+    })
+
+
+@staff_member_required
+def admin_disputes(request):
+    """Admin panel for managing disputes"""
+    disputes = Dispute.objects.select_related('service_request', 'raised_by').all()
+    
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        disputes = disputes.filter(status=status_filter)
+    
+    context = {
+        'disputes': disputes,
+        'status_choices': Dispute.STATUS_CHOICES,
+        'open_count': disputes.filter(status='open').count(),
+        'under_review_count': disputes.filter(status='under_review').count(),
+        'resolved_count': disputes.filter(status='resolved').count(),
+    }
+    return render(request, 'admin_disputes.html', context)
+
+# ==================== ADVANCED ANALYTICS ====================
+
+from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
+from django.utils import timezone
+from datetime import timedelta
+import json
+
+@staff_member_required
+def analytics_dashboard(request):
+    """Advanced analytics dashboard with charts"""
+    
+    # Date ranges
+    today = timezone.now().date()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    year_ago = today - timedelta(days=365)
+    
+    # Revenue data (last 30 days)
+    revenue_data = []
+    for i in range(30):
+        date = today - timedelta(days=i)
+        date_start = timezone.make_aware(timezone.datetime.combine(date, timezone.datetime.min.time()))
+        date_end = timezone.make_aware(timezone.datetime.combine(date, timezone.datetime.max.time()))
+        
+        revenue = Payment.objects.filter(
+            status='paid',
+            paid_at__range=(date_start, date_end)
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        revenue_data.append({
+            'date': date.strftime('%Y-%m-%d'),
+            'revenue': float(revenue)
+        })
+    
+    # User growth (last 12 months)
+    user_growth = []
+    for i in range(12):
+        month = today.replace(day=1) - timedelta(days=30 * i)
+        month_start = timezone.make_aware(timezone.datetime.combine(month.replace(day=1), timezone.datetime.min.time()))
+        next_month = month.replace(day=28) + timedelta(days=4)
+        month_end = timezone.make_aware(timezone.datetime.combine(next_month - timedelta(days=next_month.day), timezone.datetime.max.time()))
+        
+        new_users = User.objects.filter(date_joined__range=(month_start, month_end)).count()
+        user_growth.append({
+            'month': month.strftime('%B %Y'),
+            'users': new_users
+        })
+    
+    # Request status distribution
+    status_distribution = {
+        'pending': ServiceRequest.objects.filter(status='pending').count(),
+        'accepted': ServiceRequest.objects.filter(status='accepted').count(),
+        'in_progress': ServiceRequest.objects.filter(status='in_progress').count(),
+        'completed': ServiceRequest.objects.filter(status='completed').count(),
+        'rejected': ServiceRequest.objects.filter(status='rejected').count(),
+    }
+    
+    # Top services by revenue
+    top_services_revenue = Service.objects.annotate(
+        total_revenue=Sum('service_requests__amount', filter=Q(service_requests__status='completed'))
+    ).order_by('-total_revenue')[:5]
+    
+    # Provider performance
+    provider_performance = User.objects.filter(
+        role='provider'
+    ).annotate(
+        total_jobs=Count('received_service_requests', filter=Q(received_service_requests__status='completed')),
+        total_earnings=Sum('received_service_requests__provider_amount', filter=Q(received_service_requests__status='completed')),
+        avg_rating=Avg('received_ratings__rating')
+    ).order_by('-total_jobs')[:10]
+    
+    # Geographic distribution (if location data available)
+    locations = User.objects.filter(role='client').values('location').annotate(count=Count('id')).order_by('-count')[:10]
+    
+    context = {
+        'revenue_data': json.dumps(revenue_data),
+        'user_growth': json.dumps(user_growth[::-1]),  # Reverse for chronological order
+        'status_distribution': json.dumps(status_distribution),
+        'top_services_revenue': top_services_revenue,
+        'provider_performance': provider_performance,
+        'locations': locations,
+        'total_revenue': Payment.objects.filter(status='paid').aggregate(total=Sum('amount'))['total'] or 0,
+        'total_commission': Payment.objects.filter(status='paid').aggregate(total=Sum('commission'))['total'] or 0,
+        'total_users': User.objects.count(),
+        'active_providers': User.objects.filter(role='provider', is_verified=True, is_active=True).count(),
+        'completion_rate': (ServiceRequest.objects.filter(status='completed').count() / ServiceRequest.objects.count() * 100) if ServiceRequest.objects.count() > 0 else 0,
+    }
+    
+    return render(request, 'analytics_dashboard.html', context)
+
+
+@staff_member_required
+def export_report(request, report_type):
+    """Export reports as CSV/Excel"""
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{report_type}_report_{timezone.now().date()}.csv"'
+    
+    writer = csv.writer(response)
+    
+    if report_type == 'users':
+        writer.writerow(['Username', 'Email', 'Role', 'Joined Date', 'Verified', 'Suspended'])
+        users = User.objects.all()
+        for user in users:
+            writer.writerow([user.username, user.email, user.role, user.date_joined, user.is_verified, user.is_suspended])
+    
+    elif report_type == 'payments':
+        writer.writerow(['Request ID', 'Client', 'Provider', 'Amount', 'Commission', 'Status', 'Date'])
+        payments = Payment.objects.select_related('client', 'provider', 'service_request')
+        for payment in payments:
+            writer.writerow([
+                payment.service_request.id, payment.client.username, payment.provider.username,
+                payment.amount, payment.commission, payment.status, payment.paid_at
+            ])
+    
+    elif report_type == 'requests':
+        writer.writerow(['Request ID', 'Client', 'Provider', 'Service', 'Amount', 'Status', 'Created'])
+        requests = ServiceRequest.objects.select_related('client', 'provider', 'service')
+        for req in requests:
+            writer.writerow([
+                req.id, req.client.username, req.provider.username,
+                req.service.name if req.service else 'N/A',
+                req.amount, req.status, req.created_at
+            ])
+    
+    return response
+
+# ==================== MOBILE APP API ====================
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import UserSerializer, ServiceSerializer, ServiceRequestSerializer, PaymentSerializer, RatingSerializer
+
+@api_view(['GET'])
+def api_home(request):
+    """API home endpoint"""
+    return Response({
+        'message': 'Buildimity API v1',
+        'endpoints': {
+            'auth': '/api/login/',
+            'register': '/api/register/',
+            'services': '/api/services/',
+            'requests': '/api/my-requests/',
+            'profile': '/api/profile/',
+            'providers': '/api/providers/',
+        }
+    })
+
+
+@api_view(['POST'])
+def api_register(request):
+    """User registration via API"""
+    username = request.data.get('username')
+    email = request.data.get('email')
+    password = request.data.get('password')
+    role = request.data.get('role', 'client')
+    
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        role=role
+    )
+    
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_profile(request):
+    """Get user profile"""
+    serializer = UserSerializer(request.user)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_services(request):
+    """List all services"""
+    services = Service.objects.filter(is_active=True)
+    serializer = ServiceSerializer(services, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_providers(request):
+    """List providers with optional service filter"""
+    service_id = request.GET.get('service')
+    providers = User.objects.filter(role='provider', is_verified=True, is_active=True)
+    
+    if service_id:
+        providers = providers.filter(service_id=service_id)
+    
+    serializer = UserSerializer(providers, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def api_my_requests(request):
+    """Get or create service requests"""
+    if request.method == 'GET':
+        requests = ServiceRequest.objects.filter(client=request.user).order_by('-created_at')
+        serializer = ServiceRequestSerializer(requests, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        provider_id = request.data.get('provider_id')
+        message = request.data.get('message')
+        amount = request.data.get('amount', 0)
+        
+        provider = get_object_or_404(User, id=provider_id, role='provider')
+        
+        service_request = ServiceRequest.objects.create(
+            client=request.user,
+            provider=provider,
+            message=message,
+            amount=amount,
+            status='pending'
+        )
+        
+        serializer = ServiceRequestSerializer(service_request)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_make_payment(request, request_id):
+    """Initiate payment via API"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
+    
+    method = request.data.get('method')
+    phone_number = request.data.get('phone_number')
+    
+    # Mock payment processing
+    payment = Payment.objects.create(
+        service_request=service_request,
+        client=request.user,
+        provider=service_request.provider,
+        method=method,
+        payer_phone_number=phone_number,
+        amount=service_request.amount,
+        commission=service_request.amount * Decimal('0.10'),
+        provider_amount=service_request.amount * Decimal('0.90'),
+        status='pending',
+        transaction_id=f"API-{timezone.now().timestamp()}"
+    )
+    
+    serializer = PaymentSerializer(payment)
+    return Response(serializer.data)
+@login_required
+def service_checklist(request, request_id):
+    """Manage service completion checklist"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id)
+    
+    if request.user not in [service_request.client, service_request.provider]:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    # Create default checklist items if none exist
+    if service_request.checklist_items.count() == 0:
+        default_items = [
+            'Service completed as agreed',
+            'Quality meets expectations',
+            'All issues resolved',
+            'Client satisfied with work',
+            'Payment confirmed',
+        ]
+        for item in default_items:
+            ServiceChecklist.objects.create(
+                service_request=service_request,
+                item_name=item
+            )
+    
+    if request.method == 'POST':
+        # Update checklist items
+        for item in service_request.checklist_items.all():
+            checked = request.POST.get(f'item_{item.id}') == 'on'
+            if checked and not item.is_completed:
+                item.is_completed = True
+                item.completed_by = request.user
+                item.completed_at = timezone.now()
+                item.save()
+            elif not checked and item.is_completed:
+                item.is_completed = False
+                item.completed_by = None
+                item.completed_at = None
+                item.save()
+        
+        # Upload completion photo
+        if request.FILES.get('completion_photo'):
+            CompletionPhoto.objects.create(
+                service_request=service_request,
+                image=request.FILES['completion_photo'],
+                caption=request.POST.get('photo_caption', ''),
+                uploaded_by=request.user
+            )
+        
+        messages.success(request, 'Checklist updated successfully.')
+        return redirect('service_checklist', request_id=request_id)
+    
+    checklist_items = service_request.checklist_items.all()
+    completion_photos = service_request.completion_photos.all()
+    all_completed = all(item.is_completed for item in checklist_items)
+    
+    context = {
+        'service_request': service_request,
+        'checklist_items': checklist_items,
+        'completion_photos': completion_photos,
+        'all_completed': all_completed,
+        'is_provider': request.user == service_request.provider,
+        'is_client': request.user == service_request.client,
+    }
+    return render(request, 'service_checklist.html', context)
+
+# ==================== MOBILE APP API ENHANCED ====================
+
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
+from django.db.models import Q
+from decimal import Decimal
+
+@api_view(['POST'])
+def api_login(request):
+    """API login endpoint - returns token"""
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    user = authenticate(request, username=username, password=password)
+    
+    if user:
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+            'is_verified': user.is_verified,
+        })
+    else:
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['POST'])
+def api_logout(request):
+    """API logout endpoint"""
+    request.user.auth_token.delete()
+    return Response({'message': 'Logged out successfully'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_notifications(request):
+    """Get user notifications"""
+    notifications = AdminNotification.objects.filter(
+        related_user=request.user
+    ).order_by('-created_at')[:20]
+    
+    data = [{
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'is_read': n.is_read,
+        'created_at': n.created_at.isoformat(),
+    } for n in notifications]
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_mark_notification_read(request, notification_id):
+    """Mark notification as read"""
+    notification = get_object_or_404(AdminNotification, id=notification_id, related_user=request.user)
+    notification.is_read = True
+    notification.save()
+    return Response({'message': 'Notification marked as read'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_search_providers(request):
+    """Search providers with filters"""
+    query = request.GET.get('q', '')
+    service_id = request.GET.get('service_id')
+    location = request.GET.get('location', '')
+    min_rating = request.GET.get('min_rating', 0)
+    
+    providers = User.objects.filter(
+        role='provider',
+        is_verified=True,
+        is_active=True,
+        is_suspended=False
+    )
+    
+    if query:
+        providers = providers.filter(
+            Q(username__icontains=query) |
+            Q(service__name__icontains=query) |
+            Q(location__icontains=query)
+        )
+    
+    if service_id:
+        providers = providers.filter(service_id=service_id)
+    
+    if location:
+        providers = providers.filter(location__icontains=location)
+    
+    if min_rating:
+        providers = providers.filter(average_rating__gte=min_rating)
+    
+    # Annotate with additional info
+    providers = providers.annotate(
+        job_count=Count('received_service_requests', filter=Q(received_service_requests__status='completed'))
+    ).order_by('-average_rating', '-job_count')[:50]
+    
+    serializer = UserSerializer(providers, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_provider_detail(request, provider_id):
+    """Get detailed provider info including work images and ratings"""
+    provider = get_object_or_404(
+        User, 
+        id=provider_id, 
+        role='provider',
+        is_active=True
+    )
+    
+    work_images = ProviderWorkImage.objects.filter(provider=provider).values('id', 'image', 'caption')
+    ratings = Rating.objects.filter(provider=provider, is_approved=True).values('rating', 'review', 'created_at')
+    
+    # Calculate rating stats
+    from django.db.models import Avg
+    avg_rating = ratings.aggregate(avg=Avg('rating'))['avg'] or 0
+    
+    data = {
+        'id': provider.id,
+        'username': provider.username,
+        'service': provider.service.name if provider.service else None,
+        'location': provider.location,
+        'phone_number': provider.phone_number,
+        'bio': provider.bio,
+        'profile_photo': provider.profile_photo.url if provider.profile_photo else None,
+        'is_verified': provider.is_verified,
+        'average_rating': float(avg_rating),
+        'total_ratings': ratings.count(),
+        'work_images': list(work_images),
+        'recent_ratings': list(ratings.order_by('-created_at')[:5]),
+    }
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_create_service_request(request):
+    """Create a new service request from mobile app"""
+    provider_id = request.data.get('provider_id')
+    message = request.data.get('message', '')
+    amount = request.data.get('amount', 0)
+    service_need_id = request.data.get('service_need_id')
+    
+    provider = get_object_or_404(User, id=provider_id, role='provider')
+    
+    service_need = None
+    if service_need_id:
+        service_need = get_object_or_404(ClientServiceNeed, id=service_need_id, client=request.user)
+    
+    service_request = ServiceRequest.objects.create(
+        client=request.user,
+        provider=provider,
+        service_need=service_need,
+        service=provider.service,
+        message=message,
+        amount=Decimal(str(amount)),
+        status='pending'
+    )
+    
+    serializer = ServiceRequestSerializer(service_request)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_update_profile(request):
+    """Update user profile from mobile app"""
+    user = request.user
+    
+    user.first_name = request.data.get('first_name', user.first_name)
+    user.last_name = request.data.get('last_name', user.last_name)
+    user.phone_number = request.data.get('phone_number', user.phone_number)
+    user.location = request.data.get('location', user.location)
+    user.bio = request.data.get('bio', user.bio)
+    
+    if request.data.get('profile_photo'):
+        # Handle base64 image upload
+        import base64
+        from django.core.files.base import ContentFile
+        
+        format, imgstr = request.data.get('profile_photo').split(';base64,')
+        ext = format.split('/')[-1]
+        data = ContentFile(base64.b64decode(imgstr), name=f'profile.{ext}')
+        user.profile_photo = data
+    
+    user.save()
+    
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_dashboard_stats(request):
+    """Get dashboard statistics for mobile app"""
+    if request.user.role == 'client':
+        total_requests = ServiceRequest.objects.filter(client=request.user).count()
+        pending_requests = ServiceRequest.objects.filter(client=request.user, status='pending').count()
+        active_requests = ServiceRequest.objects.filter(
+            client=request.user, 
+            status__in=['accepted', 'in_progress', 'negotiating']
+        ).count()
+        completed_requests = ServiceRequest.objects.filter(client=request.user, status='completed').count()
+        
+        recent_requests = ServiceRequest.objects.filter(client=request.user).order_by('-created_at')[:5]
+        
+    else:  # provider
+        total_requests = ServiceRequest.objects.filter(provider=request.user).count()
+        pending_requests = ServiceRequest.objects.filter(provider=request.user, status='pending').count()
+        active_requests = ServiceRequest.objects.filter(
+            provider=request.user,
+            status__in=['accepted', 'in_progress', 'negotiating']
+        ).count()
+        completed_requests = ServiceRequest.objects.filter(provider=request.user, status='completed').count()
+        total_earnings = ServiceRequest.objects.filter(
+            provider=request.user, 
+            status='completed'
+        ).aggregate(total=Sum('provider_amount'))['total'] or 0
+        
+        recent_requests = ServiceRequest.objects.filter(provider=request.user).order_by('-created_at')[:5]
+    
+    recent_data = ServiceRequestSerializer(recent_requests, many=True).data
+    
+    return Response({
+        'total_requests': total_requests,
+        'pending_requests': pending_requests,
+        'active_requests': active_requests,
+        'completed_requests': completed_requests,
+        'total_earnings': float(total_earnings) if request.user.role == 'provider' else 0,
+        'recent_requests': recent_data,
+    })
+@login_required
+def my_referrals(request):
+    """Simple placeholder for referrals"""
+    return render(request, 'my_referrals.html', {
+        'referral_code': request.user.username.upper(),
+        'referral_link': request.build_absolute_uri('/signup/client/'),
+        'sent_count': 0,
+        'successful_count': 0,
+        'total_earned': 0,
+        'referrals': [],
+    })
