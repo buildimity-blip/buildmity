@@ -54,10 +54,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-<<<<<<< HEAD
     'users.middleware.DynamicSiteMiddleware',  # Dynamic site domain
-=======
->>>>>>> a83b2e658e486bfae7938737abce081f71e39692
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 ]
@@ -127,13 +124,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGOUT_REDIRECT_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirect-after-login/'
 
-<<<<<<< HEAD
 # Social Login - Google OAuth
-=======
-# Social Login
 from decouple import config
 
->>>>>>> a83b2e658e486bfae7938737abce081f71e39692
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
@@ -147,7 +140,6 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-<<<<<<< HEAD
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
@@ -158,7 +150,6 @@ FLUTTERWAVE_SECRET_KEY = config('FLUTTERWAVE_SECRET_KEY', default='')
 FLUTTERWAVE_ENCRYPTION_KEY = config('FLUTTERWAVE_ENCRYPTION_KEY', default='')
 FLUTTERWAVE_ENVIRONMENT = config('FLUTTERWAVE_ENVIRONMENT', default='sandbox')
 FLUTTERWAVE_CALLBACK_URL = config('FLUTTERWAVE_CALLBACK_URL', default='')
-# Add this to your settings.py (after your existing Flutterwave config)
 
 # Dynamic callback URL based on domain
 def get_flutterwave_callback_url(request):
@@ -166,9 +157,6 @@ def get_flutterwave_callback_url(request):
     domain = request.get_host()
     protocol = 'https' if request.is_secure() else 'http'
     return f"{protocol}://{domain}/payment/callback/"
-=======
-SOCIALACCOUNT_LOGIN_ON_GET = True
->>>>>>> a83b2e658e486bfae7938737abce081f71e39692
 
 # 🔌 DRF
 REST_FRAMEWORK = {
