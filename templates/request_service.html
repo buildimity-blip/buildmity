@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Request Service | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        /* Watermark */
+        body::before {
+            content: "Buildimity";
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 80px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.05);
+            pointer-events: none;
+            z-index: 0;
+            transform: rotate(-15deg);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        /* Provider Card */
+        .provider-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 28px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .provider-header {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .provider-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+        }
+
+        .provider-details h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .provider-details p {
+            color: #64748b;
+            margin: 5px 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-verified {
+            background: #10b981;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Map Styles */
+        .map-container {
+            margin-bottom: 20px;
+        }
+
+        #location-map {
+            height: 280px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .location-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-location {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-location-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .btn-location-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .selected-location {
+            background: #ecfdf5;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        .required:after {
+            content: '*';
+            color: #ef4444;
+            margin-left: 4px;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        /* Budget Suggestions */
+        .budget-suggestions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .budget-chip {
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .budget-chip:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #eff6ff;
+            padding: 18px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-box p {
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            margin-top: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 20px;
+            }
+            .provider-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .location-buttons {
+                flex-direction: column;
+            }
+            .budget-suggestions {
+                justify-content: center;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>
+                <i class="fas fa-paper-plane"></i> 
+                Request Service
+            </h1>
+            <div class="subtitle">Send a detailed request to the provider</div>
+
+            <!-- Provider Information -->
+            <div class="provider-card">
+                <div class="provider-header">
+                    <div class="provider-avatar">
+                        {{ provider.username|first|upper }}
+                    </div>
+                    <div class="provider-details">
+                        <h3>{{ provider.username }}</h3>
+                        <p><i class="fas fa-tools"></i> {{ provider.service.name }}</p>
+                        {% if provider.location %}
+                            <p><i class="fas fa-map-marker-alt"></i> {{ provider.location }}</p>
+                        {% endif %}
+                        <p>
+                            <i class="fas fa-star" style="color: #f59e0b;"></i> 
+                            {{ provider.average_rating|default:"0.0" }} / 5.0 
+                            ({{ provider.total_ratings }} reviews)
+                            {% if provider.is_verified %}
+                                <span class="badge-verified"><i class="fas fa-check-circle"></i> Verified</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Map -->
+            <div class="form-group">
+                <label class="required">Service Location</label>
+                <div class="map-container">
+                    <div id="location-map"></div>
+                    <div class="location-buttons">
+                        <button type="button" class="btn-location btn-location-primary" onclick="getCurrentLocation()">
+                            <i class="fas fa-location-dot"></i> Use My Current Location
+                        </button>
+                        <button type="button" class="btn-location" onclick="centerMapOnKampala()">
+                            <i class="fas fa-map-marker-alt"></i> Center Map
+                        </button>
+                    </div>
+                    <input type="hidden" name="latitude" id="latitude">
+                    <input type="hidden" name="longitude" id="longitude">
+                    <div class="selected-location" id="location-display">
+                        <i class="fas fa-map-pin"></i>
+                        <span id="location-coords">Click on the map or use "My Location" button</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" id="request-form">
+                {% csrf_token %}
+
+                <!-- Message -->
+                <div class="form-group">
+                    <label class="required">Message to Provider</label>
+                    <textarea name="message" id="message" rows="5" 
+                              placeholder="Describe what you need, when you need it, and any special requirements..." 
+                              required>{% if need %}Hello, I need help with {{ need.service_display }}. {{ need.description }}{% endif %}</textarea>
+                    <div class="help-text">
+                        <i class="fas fa-info-circle"></i> Be specific about your requirements
+                    </div>
+                </div>
+
+                <!-- Proposed Amount -->
+                <div class="form-group">
+                    <label>Proposed Amount (UGX)</label>
+                    <input type="number" name="amount" id="amount" 
+                           placeholder="e.g., 150000"
+                           value="{{ need.budget|default:'' }}" step="1000">
+                    <div class="budget-suggestions">
+                        <span class="budget-chip" onclick="setAmount(50000)">UGX 50,000</span>
+                        <span class="budget-chip" onclick="setAmount(100000)">UGX 100,000</span>
+                        <span class="budget-chip" onclick="setAmount(150000)">UGX 150,000</span>
+                        <span class="budget-chip" onclick="setAmount(200000)">UGX 200,000</span>
+                        <span class="budget-chip" onclick="setAmount(300000)">UGX 300,000</span>
+                        <span class="budget-chip" onclick="setAmount(500000)">UGX 500,000</span>
+                    </div>
+                    <div class="help-text">
+                        <i class="fas fa-info-circle"></i> Optional - you can negotiate price later
+                    </div>
+                </div>
+
+                <!-- Service Need Details -->
+                {% if need %}
+                    <div class="info-box">
+                        <strong><i class="fas fa-clipboard-list"></i> Service Need Details:</strong>
+                        <p><strong>Service:</strong> {{ need.service_display }}</p>
+                        <p><strong>Description:</strong> {{ need.description|truncatechars:150 }}</p>
+                        {% if need.location %}
+                            <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> {{ need.location }}</p>
+                        {% endif %}
+                        {% if need.budget %}
+                            <p><strong><i class="fas fa-money-bill-wave"></i> Budget:</strong> UGX {{ need.budget|floatformat:0 }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send Request
+                </button>
+                
+                {% if need %}
+                    <a href="{% url 'match_providers' need.id %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Providers
+                    </a>
+                {% else %}
+                    <a href="{% url 'search_providers' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Search
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Set suggested amount
+        function setAmount(amount) {
+            document.getElementById('amount').value = amount;
+            document.getElementById('amount').focus();
+        }
+
+        // Google Maps
+        let map;
+        let marker;
+
+        function initMap() {
+            const defaultCenter = { lat: 0.3136, lng: 32.5811 };
+            let savedLat = {% if user.latitude %}{{ user.latitude }}{% else %}null{% endif %};
+            let savedLng = {% if user.longitude %}{{ user.longitude }}{% else %}null{% endif %};
+            let center = defaultCenter;
+
+            if (savedLat && savedLng && savedLat !== 0 && savedLng !== 0) {
+                center = { lat: parseFloat(savedLat), lng: parseFloat(savedLng) };
+            }
+
+            map = new google.maps.Map(document.getElementById('location-map'), {
+                center: center,
+                zoom: 14,
+                mapTypeControl: false,
+                streetViewControl: false,
+                zoomControl: true,
+                fullscreenControl: true
+            });
+
+            marker = new google.maps.Marker({
+                position: center,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                title: 'Service location'
+            });
+
+            marker.addListener('dragend', function() {
+                updateLocation(marker.getPosition().lat(), marker.getPosition().lng());
+            });
+
+            map.addListener('click', function(event) {
+                const pos = event.latLng;
+                marker.setPosition(pos);
+                updateLocation(pos.lat(), pos.lng());
+            });
+
+            if (savedLat && savedLng) {
+                updateLocation(parseFloat(savedLat), parseFloat(savedLng));
+            } else {
+                updateLocation(center.lat, center.lng);
+            }
+        }
+
+        function updateLocation(lat, lng) {
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            document.getElementById('location-coords').innerHTML = `📍 Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat: lat, lng: lng } }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    document.getElementById('location-coords').innerHTML = `📍 ${results[0].formatted_address.substring(0, 80)}`;
+                }
+            });
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('location-coords').innerHTML = '📍 Getting your location...';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const pos = { lat: lat, lng: lng };
+                        
+                        map.setCenter(pos);
+                        map.setZoom(15);
+                        marker.setPosition(pos);
+                        updateLocation(lat, lng);
+                    },
+                    function(error) {
+                        let errorMsg = 'Unable to get location. ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg += 'Please allow location access.';
+                                break;
+                            default:
+                                errorMsg += 'Please select location on the map.';
+                        }
+                        document.getElementById('location-coords').innerHTML = `⚠️ ${errorMsg}`;
+                        alert(errorMsg);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                alert('Geolocation not supported. Please select location on the map.');
+            }
+        }
+
+        function centerMapOnKampala() {
+            const kampala = { lat: 0.3136, lng: 32.5811 };
+            map.setCenter(kampala);
+            map.setZoom(13);
+            marker.setPosition(kampala);
+            updateLocation(kampala.lat, kampala.lng);
+        }
+
+        // Form validation
+        document.getElementById('request-form').addEventListener('submit', function(e) {
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            
+            if (!lat || !lng) {
+                e.preventDefault();
+                alert('Please set your service location on the map.');
+                return false;
+            }
+        });
+    </script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM&callback=initMap" async defer></script>
+</body>
+</html>

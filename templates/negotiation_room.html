@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Negotiation Room | Service Marketplace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .message-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+        }
+
+        .message-client {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .message-provider {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .message-sender {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .message-text {
+            margin: 8px 0;
+        }
+
+        .price-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 Negotiation Room</h1>
+            <p>Discuss pricing and details with {{ service_request.provider.username }}</p>
+        </div>
+
+        <div class="card">
+            <div class="message-list">
+                {% for negotiation in negotiations %}
+                    <div class="message {% if negotiation.sender == service_request.client %}message-client{% else %}message-provider{% endif %}">
+                        <div class="message-sender">
+                            {% if negotiation.sender == service_request.client %}
+                                You (Client)
+                            {% else %}
+                                {{ negotiation.sender.username }} (Provider)
+                            {% endif %}
+                        </div>
+                        {% if negotiation.message %}
+                            <div class="message-text">{{ negotiation.message }}</div>
+                        {% endif %}
+                        {% if negotiation.proposed_price %}
+                            <div class="price-badge">💰 Proposed: UGX {{ negotiation.proposed_price }}</div>
+                        {% endif %}
+                        <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                            {{ negotiation.created_at|date:"M d, Y H:i" }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p style="text-align: center; color: #666;">No messages yet. Start the negotiation!</p>
+                {% endfor %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Your Message</label>
+                    <textarea name="message" rows="3" placeholder="Type your message here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Proposed Price (UGX)</label>
+                    <input type="number" name="price" step="1000" placeholder="Enter your proposed price">
+                </div>
+                <button type="submit" class="btn">Send Message</button>
+            </form>
+        </div>
+
+        <a href="{% url 'service_request_detail' service_request.id %}" class="back-link">← Back to Request Details</a>
+    </div>
+</body>
+</html>

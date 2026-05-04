@@ -1,0 +1,558 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Become a Provider | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        body::before {
+            content: "Buildimity";
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 80px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.05);
+            pointer-events: none;
+            transform: rotate(-15deg);
+        }
+        .container { max-width: 750px; margin: 0 auto; position: relative; z-index: 1; }
+        .card { background: white; border-radius: 32px; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .header { text-align: center; margin-bottom: 2rem; }
+        .logo-icon {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+        .logo-icon i { font-size: 2.2rem; color: white; }
+        h1 { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: #6b7280; font-size: 0.9rem; margin-top: 0.5rem; }
+        .role-badge {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 1px solid #667eea30;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.85rem; }
+        .required:after { content: '*'; color: #ef4444; margin-left: 4px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        textarea { resize: vertical; min-height: 80px; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .help-text { font-size: 0.7rem; color: #6b7280; margin-top: 0.25rem; }
+        
+        /* Services Checkboxes */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fafcff;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .service-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .service-option:hover { background: #f1f5f9; }
+        .service-option input {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .service-option label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+        
+        /* Service Tags Preview */
+        .services-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+            min-height: 50px;
+            border: 1px dashed #cbd5e1;
+            margin-top: 10px;
+        }
+        .service-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .service-tag.new { background: linear-gradient(135deg, #10b981, #059669); }
+        .remove-service {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+        .remove-service:hover { color: #ff6b6b; }
+        
+        .input-group { display: flex; gap: 10px; }
+        .btn-add {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+        
+        /* Map */
+        #location-map { height: 280px; border-radius: 12px; margin-bottom: 10px; border: 2px solid #e2e8f0; }
+        .location-buttons { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-location {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        .btn-location-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; }
+        .selected-location {
+            background: #f0fdf4;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .radius-container { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .radius-container input { flex: 1; }
+        #radius-value {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 70px;
+            text-align: center;
+        }
+        
+        /* Photo Upload */
+        .photo-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .photo-preview i { font-size: 40px; color: #94a3b8; }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
+        .links { margin-top: 1.5rem; text-align: center; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+        .links a { color: #667eea; text-decoration: none; }
+        .errorlist { color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; list-style: none; }
+        
+        @media (max-width: 640px) {
+            .card { padding: 1.5rem; }
+            .row { grid-template-columns: 1fr; }
+            .location-buttons { flex-direction: column; }
+            .input-group { flex-direction: column; }
+            .btn-add { padding: 10px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <div class="logo-icon"><i class="fas fa-hard-hat"></i></div>
+            <h1>Become a Provider</h1>
+            <div class="subtitle">Join Buildimity and grow your service business</div>
+            <div><span class="role-badge"><i class="fas fa-briefcase"></i> Service Provider Account</span></div>
+        </div>
+
+        <form method="post" id="signup-form" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errorlist">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row">
+                <div class="form-group">
+                    <label class="required">Username</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label class="required">Email</label>
+                    <input type="email" name="email" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label class="required">Password</label>
+                    <input type="password" name="password1" required>
+                </div>
+                <div class="form-group">
+                    <label class="required">Confirm Password</label>
+                    <input type="password" name="password2" required>
+                </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group">
+                <label class="required">Phone Number</label>
+                <input type="tel" name="phone_number" placeholder="e.g., 0771234567" required>
+            </div>
+
+            <!-- Service Location Text -->
+            <div class="form-group">
+                <label class="required">Service Area (City/District)</label>
+                <input type="text" name="location" placeholder="e.g., Kampala, Ntinda, Wandegeya" required>
+            </div>
+
+            <!-- Services Selection - Checkboxes -->
+            <div class="form-group">
+                <label class="required">Select Your Services</label>
+                <div class="services-grid" id="services-grid">
+                    {% for service in form.services.field.queryset %}
+                    <div class="service-option">
+                        <input type="checkbox" name="services" value="{{ service.id }}" id="service_{{ service.id }}">
+                        <label for="service_{{ service.id }}">{{ service.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="help-text">Select all services you offer</div>
+            </div>
+
+            <!-- Add New Service -->
+            <div class="form-group">
+                <label>Add a New Service</label>
+                <div class="input-group">
+                    <input type="text" name="new_service" id="new-service-name" placeholder="e.g., Smart Home Installation, Solar Panel Repair">
+                    <button type="button" class="btn-add" onclick="addNewService()">+ Add to Database</button>
+                </div>
+                <div class="help-text">Add a service not in the list. It will be available for all future providers!</div>
+            </div>
+
+            <!-- Selected Services Preview -->
+            <div class="form-group">
+                <label>Your Selected Services</label>
+                <div id="services-preview" class="services-preview">
+                    <span style="color: #94a3b8;">No services selected yet</span>
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="form-group">
+                <label>Bio / Description</label>
+                <textarea name="bio" placeholder="Tell clients about your experience..."></textarea>
+            </div>
+
+            <!-- Profile Photo -->
+            <div class="form-group">
+                <label>Profile Photo</label>
+                <div style="text-align: center;">
+                    <div class="photo-preview" id="photoPreview" onclick="document.getElementById('profile_photo').click()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <input type="file" name="profile_photo" id="profile_photo" accept="image/*" style="display: none;" onchange="previewPhoto(this)">
+                    <button type="button" class="upload-btn" onclick="document.getElementById('profile_photo').click()">
+                        <i class="fas fa-upload"></i> Choose Photo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map -->
+            <div class="form-group">
+                <label class="required">Pin Your Exact Location</label>
+                <div id="location-map"></div>
+                <div class="location-buttons">
+                    <button type="button" class="btn-location btn-location-primary" onclick="getCurrentLocation()">
+                        <i class="fas fa-location-dot"></i> Use My Current Location
+                    </button>
+                    <button type="button" class="btn-location" onclick="centerMapOnKampala()">
+                        <i class="fas fa-map-marker-alt"></i> Center Map
+                    </button>
+                </div>
+                <input type="hidden" name="latitude" id="latitude">
+                <input type="hidden" name="longitude" id="longitude">
+                <input type="hidden" name="address" id="address">
+                <div class="selected-location" id="location-display">
+                    <i class="fas fa-map-pin"></i>
+                    <span id="location-coords">Click on the map or use "My Location" button</span>
+                </div>
+            </div>
+
+            <!-- Service Radius -->
+            <div class="form-group">
+                <label>Service Radius (km)</label>
+                <div class="radius-container">
+                    <input type="range" name="service_radius" id="service-radius" min="1" max="50" value="10" step="1">
+                    <span id="radius-value">10 km</span>
+                </div>
+            </div>
+
+            <!-- City -->
+            <div class="form-group">
+                <label>City/District</label>
+                <input type="text" name="city" placeholder="e.g., Kampala">
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-user-plus"></i> Register as Provider
+            </button>
+        </form>
+
+        <div class="links">
+            <p>Already have an account? <a href="/login/">Login</a></p>
+            <p>Want to hire? <a href="/signup/client/">Sign up as Client</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Service selection
+    const checkboxes = document.querySelectorAll('input[name="services"]');
+    const previewDiv = document.getElementById('services-preview');
+    let customServices = [];
+
+    function updatePreview() {
+        const selected = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.nextElementSibling.textContent);
+        const allServices = [...selected, ...customServices];
+
+        if (allServices.length === 0) {
+            previewDiv.innerHTML = '<span style="color: #94a3b8;">No services selected yet</span>';
+            return;
+        }
+
+        previewDiv.innerHTML = allServices.map(service => `
+            <span class="service-tag ${customServices.includes(service) ? 'new' : ''}">
+                <i class="fas fa-tag"></i> ${service}
+                <button type="button" class="remove-service" onclick="removeService('${service.replace(/'/g, "\\'")}')">&times;</button>
+            </span>
+        `).join('');
+    }
+
+    function removeService(serviceName) {
+        const index = customServices.indexOf(serviceName);
+        if (index > -1) {
+            customServices.splice(index, 1);
+            document.querySelectorAll('input[name="new_service"]').forEach(inp => {
+                if (inp.value === serviceName) inp.remove();
+            });
+        }
+        checkboxes.forEach(cb => {
+            if (cb.nextElementSibling.textContent === serviceName) {
+                cb.checked = false;
+            }
+        });
+        updatePreview();
+    }
+
+    function addNewService() {
+        const input = document.getElementById('new-service-name');
+        const serviceName = input.value.trim();
+        if (!serviceName) { alert('Please enter a service name'); return; }
+
+        let found = false;
+        checkboxes.forEach(cb => {
+            if (cb.nextElementSibling.textContent === serviceName) {
+                cb.checked = true;
+                found = true;
+            }
+        });
+
+        if (!found && !customServices.includes(serviceName)) {
+            customServices.push(serviceName);
+        }
+
+        input.value = '';
+        updatePreview();
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updatePreview));
+    updatePreview();
+
+    // Photo preview
+    function previewPhoto(input) {
+        const preview = document.getElementById('photoPreview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Map functions
+    let map, marker;
+    function initMap() {
+        const center = { lat: 0.3136, lng: 32.5811 };
+        map = new google.maps.Map(document.getElementById('location-map'), {
+            center: center,
+            zoom: 13,
+            mapTypeControl: false,
+            zoomControl: true
+        });
+        marker = new google.maps.Marker({
+            position: center,
+            map: map,
+            draggable: true
+        });
+        marker.addListener('dragend', function() {
+            updateLocation(marker.getPosition().lat(), marker.getPosition().lng());
+        });
+        map.addListener('click', function(e) {
+            marker.setPosition(e.latLng);
+            updateLocation(e.latLng.lat(), e.latLng.lng());
+        });
+    }
+
+    function updateLocation(lat, lng) {
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+        document.getElementById('location-coords').innerHTML = `📍 Location set: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: { lat: lat, lng: lng } }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                document.getElementById('address').value = results[0].formatted_address;
+            }
+        });
+    }
+
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                map.setCenter(p);
+                map.setZoom(14);
+                marker.setPosition(p);
+                updateLocation(p.lat, p.lng);
+            });
+        } else { alert('Geolocation not supported'); }
+    }
+
+    function centerMapOnKampala() {
+        const k = { lat: 0.3136, lng: 32.5811 };
+        map.setCenter(k);
+        map.setZoom(12);
+        marker.setPosition(k);
+        updateLocation(k.lat, k.lng);
+    }
+
+    // Radius slider
+    document.getElementById('service-radius').addEventListener('input', function() {
+        document.getElementById('radius-value').textContent = this.value + ' km';
+    });
+
+    // Form validation
+    document.getElementById('signup-form').addEventListener('submit', function(e) {
+        const selected = Array.from(checkboxes).filter(cb => cb.checked).length;
+        if (selected === 0 && customServices.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one service');
+            return false;
+        }
+        if (!document.getElementById('latitude').value) {
+            e.preventDefault();
+            alert('Please set your location on the map');
+            return false;
+        }
+    });
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM&callback=initMap" async defer></script>
+</body>
+</html>

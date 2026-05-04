@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raise Dispute | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        h1 { font-size: 28px; margin-bottom: 8px; color: #1a1a2e; }
+        .subtitle { color: #666; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0; }
+        .info-box {
+            background: #fef3c7;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #f59e0b;
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        input:focus, textarea:focus { outline: none; border-color: #667eea; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-secondary { background: #64748b; margin-top: 12px; }
+        .help-text { font-size: 12px; color: #666; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>⚠️ Raise a Dispute</h1>
+            <div class="subtitle">We'll help resolve the issue fairly</div>
+
+            <div class="info-box">
+                <strong>Service Request #{{ service_request.id }}</strong><br>
+                Provider: {{ service_request.provider.username }}<br>
+                Amount: UGX {{ service_request.amount|floatformat:0 }}
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Reason for Dispute *</label>
+                    <select name="reason" required>
+                        <option value="">Select reason</option>
+                        <option value="service_not_completed">Service not completed</option>
+                        <option value="poor_quality">Poor quality work</option>
+                        <option value="provider_no_show">Provider didn't show up</option>
+                        <option value="payment_issue">Payment issue</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Detailed Description *</label>
+                    <textarea name="description" placeholder="Please explain what happened in detail..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Evidence Image (Optional)</label>
+                    <input type="file" name="evidence_images" accept="image/*">
+                    <div class="help-text">Upload photos that support your claim</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Evidence Document (Optional)</label>
+                    <input type="file" name="evidence_documents" accept=".pdf,.doc,.docx">
+                </div>
+
+                <button type="submit" class="btn">Submit Dispute</button>
+                <a href="{% url 'service_request_detail' service_request.id %}" class="btn btn-secondary" style="text-align: center; display: block; text-decoration: none;">Cancel</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

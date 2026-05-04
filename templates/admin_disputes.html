@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Disputes | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            text-align: center;
+            flex: 1;
+        }
+        .stat-value { font-size: 28px; font-weight: 800; color: #2563eb; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { color: #64748b; font-weight: 600; }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-open { background: #fee2e2; color: #991b1b; }
+        .badge-under_review { background: #fef3c7; color: #92400e; }
+        .badge-resolved { background: #dcfce7; color: #166534; }
+        .btn { padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 12px; }
+        .btn-view { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1><i class="fas fa-gavel"></i> Dispute Management</h1>
+            <p>Review and resolve customer disputes</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><div class="stat-value">{{ open_count }}</div><div>Open</div></div>
+            <div class="stat"><div class="stat-value">{{ under_review_count }}</div><div>Under Review</div></div>
+            <div class="stat"><div class="stat-value">{{ resolved_count }}</div><div>Resolved</div></div>
+        </div>
+
+        <div class="card">
+            <h3>All Disputes</h3>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Request</th><th>Raised By</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for dispute in disputes %}
+                    <tr>
+                        <td>#{{ dispute.id }}</td>
+                        <td>#{{ dispute.service_request.id }}</td>
+                        <td>{{ dispute.raised_by.username }}</td>
+                        <td>{{ dispute.reason|truncatechars:30 }}</td>
+                        <td><span class="badge badge-{{ dispute.status }}">{{ dispute.status|title }}</span></td>
+                        <td>{{ dispute.created_at|date:"M d, Y" }}</td>
+                        <td><a href="{% url 'dispute_detail' dispute.id %}" class="btn btn-view">View</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7">No disputes found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

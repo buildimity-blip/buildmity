@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+{% load socialaccount %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Provider Profile | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --muted: #64748b;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        /* Watermark */
+        body::before {
+            content: "Buildimity";
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 80px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.05);
+            pointer-events: none;
+            z-index: 0;
+            transform: rotate(-15deg);
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .title-wrap h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+        }
+
+        .title-wrap p {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.98rem;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+        }
+
+        .hero-card,
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-card {
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .hero-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .hero-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .hero-text h2 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .hero-text p {
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-verified {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            padding: 24px;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .hint {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stats {
+            display: grid;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            background: #f8fafc;
+        }
+
+        .stat-box h4 {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .profile-list {
+            display: grid;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .profile-item {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: #fafcff;
+        }
+
+        .profile-item strong {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .profile-item span {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .work-section {
+            margin-top: 24px;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .work-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            background: white;
+            transition: transform 0.2s;
+        }
+
+        .work-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .work-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .work-body {
+            padding: 12px;
+        }
+
+        .work-body p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+            text-align: center;
+            color: var(--muted);
+            background: #fafcff;
+        }
+
+        .google-connect {
+            background: linear-gradient(135deg, #db4437, #c5221f);
+            color: white;
+            border: none;
+        }
+
+        .google-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219,68,55,0.3);
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .images-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-left {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-text {
+                text-align: center;
+            }
+
+            .hero-inner {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .title-wrap h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="topbar">
+            <div class="title-wrap">
+                <h1><i class="fas fa-user-circle"></i> Provider Profile</h1>
+                <p>Update your professional details, payment setup, and showcase your recent work</p>
+            </div>
+
+            <div class="top-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+                <a href="{% url 'upload_work_image' %}" class="btn btn-primary">
+                    <i class="fas fa-camera"></i> Upload Work
+                </a>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero-card">
+            <div class="hero-inner">
+                <div class="hero-left">
+                    <div class="avatar">
+                        {% if provider.profile_photo %}
+                            <img src="{{ provider.profile_photo.url }}" alt="{{ provider.username }}">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                {{ provider.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="hero-text">
+                        <h2>{{ provider.get_full_name|default:provider.username }}</h2>
+                        <p><i class="fas fa-envelope"></i> {{ provider.email }}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> {{ provider.location|default:"Location not set" }}</p>
+                        <div class="services-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                            {% for service in provider.services.all|slice:":3" %}
+                                <span class="badge" style="background: #dbeafe; color: #1e40af;">{{ service.name }}</span>
+                            {% endfor %}
+                            {% if provider.services.count > 3 %}
+                                <span class="badge" style="background: #e2e8f0;">+{{ provider.services.count|add:"-3" }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    {% if provider.is_verified %}
+                        <span class="badge badge-verified"><i class="fas fa-check-circle"></i> Verified Provider</span>
+                    {% else %}
+                        <span class="badge badge-pending"><i class="fas fa-clock"></i> Verification Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Edit Profile Form -->
+            <div class="card">
+                <h3><i class="fas fa-edit"></i> Edit Profile</h3>
+                <p class="card-subtitle">Keep your information accurate so clients can trust and contact you easily</p>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" value="{{ provider.first_name }}" placeholder="Your first name">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" value="{{ provider.last_name }}" placeholder="Your last name">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" value="{{ provider.email }}" placeholder="email@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" name="phone_number" value="{{ provider.phone_number }}" placeholder="e.g., 0771234567">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Location (City/Area)</label>
+                            <input type="text" name="location" value="{{ provider.location }}" placeholder="e.g., Kampala, Ntinda">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Profile Photo</label>
+                            <input type="file" name="profile_photo" accept="image/*">
+                            <div class="hint">Upload a clear profile photo (JPG, PNG)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Preferred Payment Network</label>
+                            <select name="preferred_payment_network">
+                                <option value="">-- Select --</option>
+                                <option value="mtn" {% if provider.preferred_payment_network == 'mtn' %}selected{% endif %}>MTN Mobile Money</option>
+                                <option value="airtel" {% if provider.preferred_payment_network == 'airtel' %}selected{% endif %}>Airtel Money</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mobile Money Number</label>
+                            <input type="tel" name="mobile_money_number" value="{{ provider.mobile_money_number }}" placeholder="e.g., 0771234567">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Service Radius (km)</label>
+                            <input type="number" name="service_radius" value="{{ provider.service_radius|default:10 }}" min="1" max="100">
+                            <div class="hint">Maximum distance you're willing to travel</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>City/District</label>
+                            <input type="text" name="city" value="{{ provider.city }}" placeholder="e.g., Kampala">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Full Address</label>
+                            <input type="text" name="address" value="{{ provider.address }}" placeholder="Your full address">
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Professional Bio</label>
+                            <textarea name="bio" rows="5" placeholder="Tell clients about your experience, services, and what makes you special...">{{ provider.bio }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Profile Summary Sidebar -->
+            <div class="card">
+                <h3><i class="fas fa-chart-line"></i> Profile Summary</h3>
+                <p class="card-subtitle">A quick overview of your provider information</p>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <h4><i class="fas fa-wallet"></i> Account Balance</h4>
+                        <div class="stat-value">UGX {{ provider.account_balance|floatformat:0 }}</div>
+                    </div>
+
+                    <div class="stat-box">
+                        <h4><i class="fas fa-star"></i> Rating</h4>
+                        <div class="stat-value">{{ provider.average_rating|default:"0.0" }} / 5.0</div>
+                        <div class="hint">From {{ provider.total_ratings }} review(s)</div>
+                    </div>
+
+                    <div class="stat-box">
+                        <h4><i class="fas fa-briefcase"></i> Total Jobs</h4>
+                        <div class="stat-value">{{ provider.received_service_requests.count }}</div>
+                    </div>
+                </div>
+
+                <div class="profile-list">
+                    <div class="profile-item">
+                        <strong>Services Offered</strong>
+                        <span>
+                            {% for service in provider.services.all %}
+                                {{ service.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                No services added yet
+                            {% endfor %}
+                        </span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Phone Number</strong>
+                        <span>{{ provider.phone_number|default:"Not added" }}</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Location</strong>
+                        <span>{{ provider.location|default:"Not added" }}</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Service Radius</strong>
+                        <span>{{ provider.service_radius|default:10 }} km</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Preferred Payment</strong>
+                        <span>
+                            {% if provider.preferred_payment_network == 'mtn' %}
+                                MTN Mobile Money
+                            {% elif provider.preferred_payment_network == 'airtel' %}
+                                Airtel Money
+                            {% else %}
+                                Not selected
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Mobile Money Number</strong>
+                        <span>{{ provider.mobile_money_number|default:"Not added" }}</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <strong>Member Since</strong>
+                        <span>{{ provider.date_joined|date:"F d, Y" }}</span>
+                    </div>
+                </div>
+
+                <!-- Google Account Connection -->
+                {% if not user.socialaccount_set.exists %}
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <button onclick="location.href='{% provider_login_url 'google' process='connect' %}'" class="btn google-connect" style="width: 100%;">
+                        <i class="fab fa-google"></i> Connect Google Account
+                    </button>
+                    <div class="hint" style="margin-top: 8px;">Connect for easier login</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Work Gallery Section -->
+        <div class="card work-section">
+            <h3><i class="fas fa-images"></i> Work Gallery</h3>
+            <p class="card-subtitle">Showcase your best work to attract more clients</p>
+
+            {% if work_images %}
+                <div class="images-grid">
+                    {% for image in work_images %}
+                        <div class="work-card">
+                            <img src="{{ image.image.url }}" alt="{{ image.caption|default:'Work Image' }}">
+                            <div class="work-body">
+                                <p>{{ image.caption|default:"Project Work"|truncatechars:30 }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-camera" style="font-size: 48px; color: #cbd5e1; margin-bottom: 16px; display: block;"></i>
+                    <p>No work images yet. Share your portfolio to attract more clients!</p>
+                    <a href="{% url 'upload_work_image' %}" class="btn btn-primary" style="margin-top: 16px; display: inline-block;">
+                        <i class="fas fa-upload"></i> Upload Your First Image
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

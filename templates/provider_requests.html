@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Requests | Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .requests-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .request-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .request-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .service-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .client-name {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-accepted { background: #dbeafe; color: #1e40af; }
+        .badge-negotiating { background: #fef3c7; color: #92400e; }
+        .badge-paid { background: #d1fae5; color: #065f46; }
+        .badge-in_progress { background: #ede9fe; color: #6d28d9; }
+        .badge-completed { background: #d4edda; color: #155724; }
+        .badge-cancelled, .badge-rejected { background: #fee2e2; color: #991b1b; }
+
+        .request-details {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .detail-row {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .detail-row strong {
+            color: #555;
+            width: 120px;
+            display: inline-block;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-outline { background: white; color: #667eea; border: 2px solid #667eea; }
+
+        .empty-state {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            text-align: center;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .detail-row strong {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Service Requests</h1>
+            <p>Manage incoming requests from clients</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ requests|length }}</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% with pending=requests|length %}
+                        {{ requests|length }}
+                    {% endwith %}
+                </div>
+                <div class="stat-label">Pending Action</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% with accepted=requests|length %}
+                        {{ requests|length }}
+                    {% endwith %}
+                </div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% with completed=requests|length %}
+                        {{ requests|length }}
+                    {% endwith %}
+                </div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <div class="requests-grid">
+            {% for request in requests %}
+                <div class="request-card">
+                    <div class="request-header">
+                        <div>
+                            <div class="service-name">
+                                {% if request.service %}
+                                    {{ request.service.name }}
+                                {% elif request.service_need %}
+                                    {{ request.service_need.service_display }}
+                                {% else %}
+                                    Service Request
+                                {% endif %}
+                            </div>
+                            <div class="client-name">
+                                <i class="fas fa-user"></i> Client: {{ request.client.username }}
+                            </div>
+                        </div>
+                        <span class="badge badge-{{ request.status }}">{{ request.status|title }}</span>
+                    </div>
+
+                    <div class="request-details">
+                        <div class="detail-row">
+                            <strong>📝 Message:</strong> {{ request.message|truncatechars:100 }}
+                        </div>
+                        {% if request.amount %}
+                            <div class="detail-row">
+                                <strong>💰 Amount:</strong> UGX {{ request.amount|floatformat:0 }}
+                            </div>
+                        {% endif %}
+                        <div class="detail-row">
+                            <strong>📅 Created:</strong> {{ request.created_at|date:"M d, Y H:i" }}
+                        </div>
+                        {% if request.service_need and request.service_need.location %}
+                            <div class="detail-row">
+                                <strong>📍 Location:</strong> {{ request.service_need.location }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="request-actions">
+                        <a href="{% url 'service_request_detail' request.id %}" class="btn btn-outline">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        
+                        <!-- Show Accept/Reject buttons for PENDING requests -->
+                        {% if request.status == 'pending' %}
+                            <a href="{% url 'update_request_status' request.id 'accepted' %}" class="btn btn-success">
+                                <i class="fas fa-check"></i> Accept Job
+                            </a>
+                            <a href="{% url 'update_request_status' request.id 'rejected' %}" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Reject
+                            </a>
+                        {% endif %}
+                        
+                        <!-- Show Start Work button for ACCEPTED or PAID requests -->
+                        {% if request.status == 'accepted' or request.status == 'paid' %}
+                            <a href="{% url 'update_request_status' request.id 'in_progress' %}" class="btn btn-warning">
+                                <i class="fas fa-play"></i> Start Work
+                            </a>
+                        {% endif %}
+                        
+                        <!-- Show Mark Complete button for IN_PROGRESS requests -->
+                        {% if request.status == 'in_progress' %}
+                            <a href="{% url 'provider_confirm_completion' request.id %}" class="btn btn-success">
+                                <i class="fas fa-check-double"></i> Mark Complete
+                            </a>
+                        {% endif %}
+                        
+                        <!-- Show Negotiate button for most statuses -->
+                        {% if request.status != 'completed' and request.status != 'rejected' and request.status != 'cancelled' %}
+                            <a href="{% url 'negotiation_room' request.id %}" class="btn btn-primary">
+                                <i class="fas fa-comment-dollar"></i> Negotiate
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e1;"></i>
+                    <h3 style="margin-top: 20px;">📭 No Requests Yet</h3>
+                    <p>You haven't received any service requests.</p>
+                    <p style="margin-top: 10px;">Complete your profile to attract more clients!</p>
+                    <a href="{% url 'provider_profile' %}" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">
+                        <i class="fas fa-user-edit"></i> Update Your Profile
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+    </div>
+</body>
+</html>

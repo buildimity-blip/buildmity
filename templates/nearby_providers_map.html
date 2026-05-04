@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Nearby Providers - Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,geometry"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .topbar h1 {
+            font-size: 1.2rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filters select, .filters input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: white;
+            color: #2563eb;
+        }
+
+        #map {
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        .provider-card {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .provider-card.active {
+            display: block;
+        }
+
+        .provider-item {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .provider-item:hover {
+            background: #f1f5f9;
+        }
+
+        .provider-name {
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .provider-info {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .distance-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 20;
+        }
+
+        .location-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filters {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1><i class="fas fa-map-marker-alt"></i> Find Nearby Service Providers</h1>
+        <div class="filters">
+            <select id="service-filter">
+                <option value="">All Services</option>
+                {% for service in services %}
+                    <option value="{{ service.id }}" {% if selected_service == service.id|stringformat:"s" %}selected{% endif %}>
+                        {{ service.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <select id="radius-filter">
+                <option value="5" {% if selected_radius == 5 %}selected{% endif %}>5 km radius</option>
+                <option value="10" {% if selected_radius == 10 %}selected{% endif %}>10 km radius</option>
+                <option value="20" {% if selected_radius == 20 %}selected{% endif %}>20 km radius</option>
+                <option value="50" {% if selected_radius == 50 %}selected{% endif %}>50 km radius</option>
+            </select>
+            <button class="btn" id="search-btn"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="location-btn" id="my-location-btn">
+        <i class="fas fa-location-arrow" style="color: #2563eb; font-size: 24px;"></i>
+    </div>
+
+    <div class="provider-card" id="provider-card">
+        <h3 style="margin-bottom: 12px;"><i class="fas fa-users"></i> Nearby Providers</h3>
+        <div id="providers-list">
+            {% for item in nearby_providers %}
+            <div class="provider-item" data-lat="{{ item.provider.latitude }}" data-lng="{{ item.provider.longitude }}" data-id="{{ item.provider.id }}">
+                <div class="provider-name">{{ item.provider.username }}</div>
+                <div class="provider-info">
+                    {{ item.provider.service.name|default:"Service Provider" }} • 
+                    <span class="distance-badge">{{ item.distance }} km away</span>
+                    {% if item.eta %} • ~{{ item.eta }} min ETA{% endif %}
+                </div>
+                <div class="provider-info">
+                    ⭐ {{ item.provider.average_rating|default:"0.0" }} ({{ item.provider.total_ratings }} reviews)
+                </div>
+            </div>
+            {% empty %}
+            <p style="text-align: center; padding: 20px;">No providers found in your area. Try a larger radius.</p>
+            {% endfor %}
+        </div>
+        {% if nearby_providers %}
+        <div style="padding: 12px; border-top: 1px solid #e2e8f0; margin-top: 8px;">
+            <button class="btn" style="width: 100%; background: #2563eb; color: white;" onclick="viewAllProviders()">
+                View All {{ nearby_providers|length }} Providers
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="loading" id="loading" style="display: none;">
+        <i class="fas fa-spinner fa-pulse"></i> Loading your location...
+    </div>
+
+    <script>
+        let map;
+        let markers = [];
+        let userMarker;
+        let infoWindow;
+
+        // Provider data from backend
+        const providers = [
+            {% for item in nearby_providers %}
+            {
+                id: {{ item.provider.id }},
+                name: "{{ item.provider.username|escapejs }}",
+                service: "{{ item.provider.service.name|default:'Service Provider'|escapejs }}",
+                lat: {{ item.provider.latitude|default:0 }},
+                lng: {{ item.provider.longitude|default:0 }},
+                distance: {{ item.distance }},
+                eta: {{ item.eta|default:0 }},
+                rating: {{ item.provider.average_rating|default:0 }},
+                phone: "{{ item.provider.phone_number|default:'' }}"
+            },
+            {% endfor %}
+        ];
+
+        let userLat = {{ user_lat|default:'null' }};
+        let userLng = {{ user_lng|default:'null' }};
+
+        function initMap() {
+            // Default center (Kampala, Uganda)
+            const defaultCenter = { lat: 0.3136, lng: 32.5811 };
+            const center = (userLat && userLng) ? { lat: userLat, lng: userLng } : defaultCenter;
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: center,
+                styles: [
+                    {
+                        featureType: 'poi',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'off' }]
+                    }
+                ]
+            });
+
+            infoWindow = new google.maps.InfoWindow();
+
+            // Add user marker if location exists
+            if (userLat && userLng) {
+                addUserMarker(userLat, userLng);
+            }
+
+            // Add provider markers
+            addProviderMarkers();
+
+            // Show provider card
+            document.getElementById('provider-card').classList.add('active');
+        }
+
+        function addUserMarker(lat, lng) {
+            if (userMarker) {
+                userMarker.setMap(null);
+            }
+            userMarker = new google.maps.Marker({
+                position: { lat: lat, lng: lng },
+                map: map,
+                icon: {
+                    url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                    scaledSize: new google.maps.Size(40, 40)
+                },
+                title: 'Your Location'
+            });
+        }
+
+        function addProviderMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            providers.forEach(provider => {
+                if (provider.lat && provider.lng) {
+                    const marker = new google.maps.Marker({
+                        position: { lat: provider.lat, lng: provider.lng },
+                        map: map,
+                        icon: {
+                            url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                            scaledSize: new google.maps.Size(32, 32)
+                        },
+                        title: provider.name
+                    });
+
+                    const content = `
+                        <div style="padding: 8px;">
+                            <strong>${provider.name}</strong><br>
+                            ${provider.service}<br>
+                            📍 ${provider.distance} km away<br>
+                            ⏱️ ~${provider.eta} min ETA<br>
+                            ⭐ ${provider.rating}/5<br>
+                            <a href="/provider/${provider.id}/" style="color: #2563eb;">View Profile</a>
+                            <button onclick="requestService(${provider.id})" style="margin-top: 8px; padding: 5px 10px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                Request Service
+                            </button>
+                        </div>
+                    `;
+
+                    marker.addListener('click', () => {
+                        infoWindow.setContent(content);
+                        infoWindow.open(map, marker);
+                    });
+
+                    markers.push(marker);
+                }
+            });
+        }
+
+        function getCurrentLocation() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLng = position.coords.longitude;
+                        
+                        // Update map
+                        map.setCenter({ lat: userLat, lng: userLng });
+                        map.setZoom(14);
+                        addUserMarker(userLat, userLng);
+                        
+                        // Save location to server
+                        saveLocationToServer(userLat, userLng);
+                        
+                        // Reload nearby providers
+                        searchNearbyProviders();
+                        
+                        loading.style.display = 'none';
+                    },
+                    (error) => {
+                        loading.style.display = 'none';
+                        alert('Unable to get your location. Please enable location services.');
+                    }
+                );
+            } else {
+                loading.style.display = 'none';
+                alert('Geolocation is not supported by your browser.');
+            }
+        }
+
+        function saveLocationToServer(lat, lng) {
+            fetch("{% url 'update_location' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": getCookie('csrftoken')
+                },
+                body: `latitude=${lat}&longitude=${lng}`
+            });
+        }
+
+        function searchNearbyProviders() {
+            if (!userLat || !userLng) {
+                getCurrentLocation();
+                return;
+            }
+            
+            const radius = document.getElementById('radius-filter').value;
+            const serviceId = document.getElementById('service-filter').value;
+            
+            window.location.href = `{% url 'nearby_providers' %}?lat=${userLat}&lng=${userLng}&radius=${radius}&service=${serviceId}`;
+        }
+
+        function viewAllProviders() {
+            const providersList = [];
+            {% for item in nearby_providers %}
+                providersList.push({{ item.provider.id }});
+            {% endfor %}
+            if (providersList.length > 0) {
+                window.location.href = `/search-providers/?service=${document.getElementById('service-filter').value}`;
+            }
+        }
+
+        function requestService(providerId) {
+            window.location.href = `/request-service/${providerId}/`;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Event listeners
+        document.getElementById('my-location-btn').addEventListener('click', getCurrentLocation);
+        document.getElementById('search-btn').addEventListener('click', searchNearbyProviders);
+        
+        // Initialize map when page loads
+        window.initMap = initMap;
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM&libraries=places,geometry"></script>
+</body>
+</html>

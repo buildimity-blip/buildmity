@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Providers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
+        input {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        button {
+            padding: 10px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Find a Service Provider</h2>
+
+    <form method="get">
+        <input type="text" name="q" placeholder="Type service e.g plumber" value="{{ query }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <p><a href="/dashboard/">Back to Dashboard</a></p>
+
+    {% if query %}
+        <h3>Results for "{{ query }}"</h3>
+    {% endif %}
+
+    {% for provider in providers %}
+        <div class="card">
+            <p><strong>Name:</strong> {{ provider.username }}</p>
+            <p><strong>Service:</strong> {{ provider.service_name }}</p>
+            <p><strong>Location:</strong> {{ provider.location }}</p>
+            <p><strong>Phone:</strong> {{ provider.phone_number }}</p>
+            <p><strong>About:</strong> {{ provider.bio }}</p>
+        </div>
+    {% empty %}
+        {% if query %}
+            <p>No providers found for that service.</p>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>

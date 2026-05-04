@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Sign Up - Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #4a5568;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .required:after {
+            content: '*';
+            color: #e53e3e;
+            margin-left: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .errorlist {
+            color: #e53e3e;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        button, .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 0.5rem;
+            text-align: center;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        button:hover, .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #48bb78;
+            color: #48bb78;
+        }
+
+        .btn-outline:hover {
+            background: #48bb78;
+            color: white;
+        }
+
+        .links {
+            margin-top: 1.5rem;
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .links a {
+            color: #48bb78;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        /* Map Styles */
+        #location-map {
+            height: 300px;
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .location-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-location {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .btn-location:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-location-primary {
+            background: #48bb78;
+            color: white;
+            border: none;
+        }
+
+        .btn-location-primary:hover {
+            background: #38a169;
+        }
+
+        .selected-location {
+            background: #f0fdf4;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terms-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 1rem 0;
+        }
+
+        .terms-group input {
+            width: auto;
+            margin-top: 2px;
+        }
+
+        .terms-group label {
+            margin-bottom: 0;
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 1.5rem;
+            }
+            .location-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-hard-hat"></i>
+            </div>
+            <h1>Buildimity</h1>
+        </div>
+
+        <h2>Register as Client</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" id="signup-form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label class="required">Username</label>
+                <input type="text" name="username" required>
+                {% if form.username.errors %}
+                    <div class="errorlist">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="required">Email</label>
+                <input type="email" name="email" required>
+                {% if form.email.errors %}
+                    <div class="errorlist">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="required">Password</label>
+                <input type="password" name="password1" required>
+                {% if form.password1.errors %}
+                    <div class="errorlist">{{ form.password1.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="required">Confirm Password</label>
+                <input type="password" name="password2" required>
+                {% if form.password2.errors %}
+                    <div class="errorlist">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone_number">
+                <small class="help-text">Optional - for provider contact</small>
+            </div>
+
+            <!-- ========== MAPS LOCATION SECTION ========== -->
+            <div class="form-group">
+                <label class="required">Your Location *</label>
+                <div id="location-map"></div>
+                <div class="location-buttons">
+                    <button type="button" class="btn-location btn-location-primary" onclick="getCurrentLocation()">
+                        <i class="fas fa-location-dot"></i> Use My Current Location
+                    </button>
+                    <button type="button" class="btn-location" onclick="centerMapOnKampala()">
+                        <i class="fas fa-map-marker-alt"></i> Center Map
+                    </button>
+                </div>
+                <input type="hidden" name="latitude" id="latitude" value="">
+                <input type="hidden" name="longitude" id="longitude" value="">
+                <input type="hidden" name="address" id="address" value="">
+                <div class="selected-location" id="location-display">
+                    <i class="fas fa-map-pin"></i> 
+                    <span id="location-coords">Click on the map or use "My Location" button</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Service Radius (km)</label>
+                <div class="radius-container" style="display: flex; align-items: center; gap: 15px;">
+                    <input type="range" name="service_radius" id="service-radius" min="1" max="50" value="10" step="1" style="flex: 1;">
+                    <span id="radius-value" style="background: #48bb78; color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; min-width: 70px; text-align: center;">10 km</span>
+                </div>
+                <small class="help-text">Maximum distance you're willing to travel for services</small>
+            </div>
+
+            <div class="form-group">
+                <label>City/District</label>
+                <input type="text" name="city" id="city" placeholder="e.g., Kampala">
+                <small class="help-text">Your city or district</small>
+            </div>
+            <!-- ========== END MAPS LOCATION SECTION ========== -->
+
+            <!-- Terms and Conditions -->
+            <div class="terms-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">
+                    I agree to the <a href="/terms/" target="_blank">Terms of Service</a> and 
+                    <a href="/privacy/" target="_blank">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit">
+                <i class="fas fa-user-check"></i> Create Client Account
+            </button>
+        </form>
+
+        <div class="links">
+            <p>Already have an account? <a href="/login/">Login</a></p>
+            <p>Want to offer services? <a href="/signup/provider/">Sign up as Provider</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ========== SIMPLE WORKING MAP ==========
+        let map;
+        let marker;
+
+        function initMap() {
+            // Default center - Kampala, Uganda
+            const defaultCenter = { lat: 0.3136, lng: 32.5811 };
+            
+            // Create map
+            map = new google.maps.Map(document.getElementById('location-map'), {
+                center: defaultCenter,
+                zoom: 14,
+                mapTypeControl: true,
+                streetViewControl: true,
+                zoomControl: true,
+                fullscreenControl: true
+            });
+
+            // Create draggable marker
+            marker = new google.maps.Marker({
+                position: defaultCenter,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                title: 'Your location'
+            });
+
+            // Update location when marker is dragged
+            marker.addListener('dragend', function() {
+                const position = marker.getPosition();
+                updateLocation(position.lat(), position.lng());
+            });
+
+            // Update location when map is clicked
+            map.addListener('click', function(event) {
+                const position = event.latLng;
+                marker.setPosition(position);
+                updateLocation(position.lat(), position.lng());
+            });
+            
+            // Set initial location
+            updateLocation(defaultCenter.lat, defaultCenter.lng);
+        }
+
+        function updateLocation(lat, lng) {
+            // Update hidden inputs
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            document.getElementById('address').value = `${lat}, ${lng}`;
+            
+            // Update display
+            document.getElementById('location-coords').innerHTML = `📍 Location set: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            document.getElementById('location-display').style.background = '#ecfdf5';
+            
+            // Reverse geocode to get address
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat: lat, lng: lng } }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    document.getElementById('address').value = results[0].formatted_address;
+                    document.getElementById('location-coords').innerHTML = `📍 ${results[0].formatted_address.substring(0, 80)}`;
+                    
+                    // Extract city
+                    for (const component of results[0].address_components) {
+                        if (component.types.includes('locality') || component.types.includes('administrative_area_level_2')) {
+                            document.getElementById('city').value = component.long_name;
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('location-coords').innerHTML = '📍 Getting your location...';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const pos = { lat: lat, lng: lng };
+                        
+                        map.setCenter(pos);
+                        map.setZoom(15);
+                        marker.setPosition(pos);
+                        updateLocation(lat, lng);
+                    },
+                    function(error) {
+                        let errorMsg = 'Could not get your location. ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg += 'Please allow location access.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg += 'Location unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg += 'Request timed out.';
+                                break;
+                            default:
+                                errorMsg += 'Please select location on the map.';
+                        }
+                        document.getElementById('location-coords').innerHTML = `⚠️ ${errorMsg}`;
+                        alert(errorMsg);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported. Please select location on the map.');
+            }
+        }
+
+        function centerMapOnKampala() {
+            const kampala = { lat: 0.3136, lng: 32.5811 };
+            map.setCenter(kampala);
+            map.setZoom(12);
+            marker.setPosition(kampala);
+            updateLocation(kampala.lat, kampala.lng);
+        }
+
+        // Update radius display
+        const radiusSlider = document.getElementById('service-radius');
+        const radiusDisplay = document.getElementById('radius-value');
+        
+        if (radiusSlider) {
+            radiusSlider.addEventListener('input', function() {
+                radiusDisplay.textContent = this.value + ' km';
+            });
+        }
+
+        // Validate location before submit
+        document.getElementById('signup-form').addEventListener('submit', function(e) {
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            const terms = document.getElementById('terms').checked;
+            
+            if (!lat || !lng || lat === '0' || lng === '0') {
+                e.preventDefault();
+                alert('Please set your location on the map (click, drag, or use "My Location")');
+                return false;
+            }
+            
+            if (!terms) {
+                e.preventDefault();
+                alert('Please agree to the Terms of Service and Privacy Policy');
+                return false;
+            }
+        });
+    </script>
+    
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM&callback=initMap" async defer></script>
+</body>
+</html>

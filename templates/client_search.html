@@ -1,0 +1,344 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Providers | Service Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #2563eb;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .search-header {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .search-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-header p {
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-form button {
+            padding: 1rem 2rem;
+            background: white;
+            color: #2563eb;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .search-form button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .results-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .results-header h2 {
+            font-size: 1.3rem;
+            color: #1e293b;
+        }
+
+        .provider-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .provider-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
+        }
+
+        .provider-info h3 {
+            font-size: 1.2rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .provider-info p {
+            color: #64748b;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .provider-info i {
+            width: 20px;
+            color: #2563eb;
+        }
+
+        .service-badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .contact-btn {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .service-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .service-card:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .provider-count {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+            .provider-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .search-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">ServiceMarket</div>
+        <div class="nav-links">
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'create_service_need' %}">Post Need</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="search-header">
+            <h1><i class="fas fa-search"></i> Find a Service Provider</h1>
+            <p>Search for trusted professionals in your area</p>
+            <form action="{% url 'client_search' %}" method="get" class="search-form">
+                <input type="text" name="q" placeholder="e.g., Plumbing, Electrical, Cleaning, Painting..." value="{{ query }}">
+                <button type="submit"><i class="fas fa-search"></i> Search</button>
+            </form>
+        </div>
+
+        <div class="results-section">
+            {% if query %}
+                <div class="results-header">
+                    <h2><i class="fas fa-users"></i> Results for "{{ query }}"</h2>
+                </div>
+                
+                {% if providers %}
+                    {% for provider in providers %}
+                        <div class="provider-card">
+                            <div class="provider-info">
+                                <h3><i class="fas fa-user-circle"></i> {{ provider.username }}</h3>
+                                <p><i class="fas fa-tag"></i> Service: <strong>{{ provider.service.name }}</strong></p>
+                                {% if provider.location %}
+                                    <p><i class="fas fa-map-marker-alt"></i> Location: {{ provider.location }}</p>
+                                {% endif %}
+                                {% if provider.phone_number %}
+                                    <p><i class="fas fa-phone"></i> {{ provider.phone_number }}</p>
+                                {% endif %}
+                                {% if provider.is_verified %}
+                                    <span class="service-badge"><i class="fas fa-check-circle"></i> Verified Provider</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{% url 'request_service' provider.id %}" class="contact-btn">
+                                    <i class="fas fa-handshake"></i> Request Service
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-frown"></i>
+                        <h3>No providers found for "{{ query }}"</h3>
+                        <p>Try a different search term or browse our services below.</p>
+                        <a href="{% url 'create_service_need' %}" class="contact-btn" style="margin-top: 1rem; display: inline-block;">
+                            <i class="fas fa-pen-alt"></i> Post a Service Need
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="results-header">
+                    <h2><i class="fas fa-star"></i> Popular Services</h2>
+                    <p>Click on any service to find providers</p>
+                </div>
+                <div class="services-grid">
+                    {% for service in services %}
+                        <div class="service-card" onclick="window.location.href='{% url 'client_search' %}?q={{ service.name|urlencode }}'">
+                            <div class="service-name">{{ service.name }}</div>
+                            <div class="provider-count">{{ service.providers.count }} provider(s) available</div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <i class="fas fa-tags"></i>
+                            <p>No services available yet.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

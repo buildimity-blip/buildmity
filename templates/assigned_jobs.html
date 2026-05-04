@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assigned Jobs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+        }
+        .job {
+            background: white;
+            padding: 18px;
+            margin-bottom: 14px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <h2>My Assigned Jobs</h2>
+    <p><a href="/jobs/available/">Browse Jobs</a> | <a href="/dashboard/">Dashboard</a></p>
+
+    {% for job in jobs %}
+        <div class="job">
+            <p><strong>Client:</strong> {{ job.client.username }}</p>
+            <p><strong>Description:</strong> {{ job.description }}</p>
+            <p><strong>Status:</strong> {{ job.status }}</p>
+            <p><strong>Created:</strong> {{ job.created_at }}</p>
+        </div>
+    {% empty %}
+        <p>You have no assigned jobs.</p>
+    {% endfor %}
+</body>
+</html>

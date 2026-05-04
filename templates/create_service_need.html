@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request a Service - Buildimity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f4f7fb 0%, #e2e8f0 100%);
+            padding: 20px;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .required:after {
+            content: '*';
+            color: #ef4444;
+            margin-left: 4px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .help {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .notice {
+            background: #fff7ed;
+            color: #9a3412;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #f59e0b;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Map Styles */
+        #location-map {
+            height: 320px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .location-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-location {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .btn-location:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-location-primary {
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+
+        .btn-location-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .selected-location {
+            background: #f0fdf4;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Service Suggestions */
+        .service-suggestions {
+            position: relative;
+        }
+
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 100;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestions-list.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-item:hover {
+            background: #f1f5f9;
+        }
+
+        .suggestion-item strong {
+            color: #2563eb;
+        }
+
+        .suggestion-item small {
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        @media (max-width: 700px) {
+            .card {
+                padding: 20px;
+            }
+            .row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .location-buttons {
+                flex-direction: column;
+            }
+            h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>
+                <i class="fas fa-clipboard-list"></i> 
+                Request a Service
+            </h1>
+            <p class="subtitle">Tell us what you need and we'll match you with the best providers</p>
+
+            <div class="notice">
+                <i class="fas fa-info-circle"></i> 
+                If your service is not listed, just type it in the search box and select "Add as new service"
+            </div>
+
+            <form method="post" id="service-request-form">
+                {% csrf_token %}
+
+                <!-- Service Selection with Auto-suggest -->
+                <div class="form-group">
+                    <label class="required">Service Needed</label>
+                    <div class="service-suggestions">
+                        <input type="text" id="service-search" 
+                               placeholder="Start typing a service (e.g., Plumbing, Electrical, Cleaning)..."
+                               autocomplete="off">
+                        <input type="hidden" name="service" id="selected-service-id" value="">
+                        <input type="hidden" name="custom_service_name" id="custom-service-name" value="">
+                        <div id="suggestions-list" class="suggestions-list"></div>
+                    </div>
+                    <div class="help">
+                        <i class="fas fa-search"></i> Type to search existing services or create a new one
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Describe What You Need</label>
+                    <textarea
+                        name="description"
+                        id="description"
+                        placeholder="Example: I need urgent plumbing repair for a leaking kitchen pipe. The pipe is under the sink and needs replacement."
+                        required
+                    ></textarea>
+                    <div class="help">Be specific about the work required</div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Budget (UGX)</label>
+                        <input type="number" step="1000" name="budget" id="budget" placeholder="e.g., 150000">
+                        <div class="help">Optional - helps providers understand your budget</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Preferred Date</label>
+                        <input type="date" name="preferred_date" id="preferred_date">
+                        <div class="help">When would you like the service?</div>
+                    </div>
+                </div>
+
+                <!-- Location Map Section -->
+                <div class="form-group">
+                    <label class="required">Service Location</label>
+                    <div id="location-map"></div>
+                    <div class="location-buttons">
+                        <button type="button" class="btn-location btn-location-primary" onclick="getCurrentLocation()">
+                            <i class="fas fa-location-dot"></i> Use My Current Location
+                        </button>
+                        <button type="button" class="btn-location" onclick="centerMapOnKampala()">
+                            <i class="fas fa-map-marker-alt"></i> Center Map
+                        </button>
+                    </div>
+                    <input type="hidden" name="latitude" id="latitude" value="{{ user.latitude|default:'0.3136' }}">
+                    <input type="hidden" name="longitude" id="longitude" value="{{ user.longitude|default:'32.5811' }}">
+                    <input type="text" name="location" id="location-text" placeholder="Your address (optional)">
+                    <div class="selected-location" id="location-display">
+                        <i class="fas fa-map-pin"></i> 
+                        <span id="location-coords">Click on the map or use "My Location" button</span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Find Providers
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========== SERVICE AUTO-SUGGEST ==========
+        const allServices = [
+            {% for service in services %}
+            { id: {{ service.id }}, name: "{{ service.name|escapejs }}" },
+            {% endfor %}
+        ];
+
+        const serviceSearch = document.getElementById('service-search');
+        const suggestionsList = document.getElementById('suggestions-list');
+        const selectedServiceId = document.getElementById('selected-service-id');
+        const customServiceName = document.getElementById('custom-service-name');
+        
+        function updateServiceSuggestions() {
+            const query = serviceSearch.value.trim().toLowerCase();
+            if (query.length < 2) {
+                suggestionsList.classList.remove('active');
+                return;
+            }
+            
+            const matches = allServices.filter(s => 
+                s.name.toLowerCase().includes(query)
+            ).slice(0, 8);
+            
+            if (matches.length > 0) {
+                suggestionsList.innerHTML = matches.map(s => `
+                    <div class="suggestion-item" onclick="selectService(${s.id}, '${s.name.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-tag" style="color: #2563eb;"></i>
+                        <span><strong>${s.name}</strong> <small>Click to select</small></span>
+                    </div>
+                `).join('');
+                suggestionsList.classList.add('active');
+            } else {
+                suggestionsList.innerHTML = `
+                    <div class="suggestion-item" onclick="createCustomService('${query.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-plus-circle" style="color: #10b981;"></i>
+                        <span><strong>Add "${query}"</strong> <small>as a new service request</small></span>
+                    </div>
+                `;
+                suggestionsList.classList.add('active');
+            }
+        }
+        
+        function selectService(id, name) {
+            serviceSearch.value = name;
+            selectedServiceId.value = id;
+            customServiceName.value = '';
+            suggestionsList.classList.remove('active');
+        }
+        
+        function createCustomService(name) {
+            serviceSearch.value = name;
+            selectedServiceId.value = '';
+            customServiceName.value = name;
+            suggestionsList.classList.remove('active');
+        }
+        
+        serviceSearch.addEventListener('input', updateServiceSuggestions);
+        
+        document.addEventListener('click', function(e) {
+            if (!serviceSearch.contains(e.target) && !suggestionsList.contains(e.target)) {
+                suggestionsList.classList.remove('active');
+            }
+        });
+
+        // ========== GOOGLE MAPS ==========
+        let map;
+        let marker;
+
+        function initMap() {
+            // Default center - Kampala, Uganda
+            const defaultCenter = { lat: 0.3136, lng: 32.5811 };
+            
+            // Check for saved location
+            let savedLat = parseFloat(document.getElementById('latitude').value);
+            let savedLng = parseFloat(document.getElementById('longitude').value);
+            let center = defaultCenter;
+            
+            if (!isNaN(savedLat) && !isNaN(savedLng) && savedLat !== 0 && savedLng !== 0) {
+                center = { lat: savedLat, lng: savedLng };
+            }
+            
+            // Create map
+            map = new google.maps.Map(document.getElementById('location-map'), {
+                center: center,
+                zoom: 14,
+                mapTypeControl: true,
+                streetViewControl: true,
+                zoomControl: true,
+                fullscreenControl: true
+            });
+
+            // Create draggable marker
+            marker = new google.maps.Marker({
+                position: center,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                title: 'Drag to set your service location'
+            });
+
+            // Update location when marker is dragged
+            marker.addListener('dragend', function() {
+                const position = marker.getPosition();
+                updateLocation(position.lat(), position.lng());
+            });
+
+            // Update location when map is clicked
+            map.addListener('click', function(event) {
+                const position = event.latLng;
+                marker.setPosition(position);
+                updateLocation(position.lat(), position.lng());
+            });
+            
+            // Set initial location display
+            updateLocation(center.lat, center.lng);
+        }
+
+        function updateLocation(lat, lng) {
+            // Update hidden inputs
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            
+            // Optional: Reverse geocode to get address (if you want to show address)
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat: lat, lng: lng } }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    document.getElementById('location-text').value = address;
+                    document.getElementById('location-coords').innerHTML = `📍 ${address.substring(0, 80)}`;
+                } else {
+                    document.getElementById('location-coords').innerHTML = `📍 Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                }
+            });
+            
+            document.getElementById('location-display').style.background = '#ecfdf5';
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('location-coords').innerHTML = '📍 Getting your location...';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const pos = { lat: lat, lng: lng };
+                        
+                        map.setCenter(pos);
+                        map.setZoom(15);
+                        marker.setPosition(pos);
+                        updateLocation(lat, lng);
+                    },
+                    function(error) {
+                        let errorMsg = 'Could not get your location. ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg += 'Please allow location access.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg += 'Location unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg += 'Request timed out.';
+                                break;
+                            default:
+                                errorMsg += 'Please select location on the map.';
+                        }
+                        document.getElementById('location-coords').innerHTML = `⚠️ ${errorMsg}`;
+                        alert(errorMsg);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported. Please select location on the map.');
+            }
+        }
+
+        function centerMapOnKampala() {
+            const kampala = { lat: 0.3136, lng: 32.5811 };
+            map.setCenter(kampala);
+            map.setZoom(12);
+            marker.setPosition(kampala);
+            updateLocation(kampala.lat, kampala.lng);
+        }
+
+        // ========== FORM VALIDATION ==========
+        document.getElementById('service-request-form').addEventListener('submit', function(e) {
+            const serviceValue = serviceSearch.value.trim();
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            const description = document.getElementById('description').value.trim();
+            
+            // Validate service
+            if (!serviceValue) {
+                e.preventDefault();
+                alert('Please enter or select a service.');
+                serviceSearch.focus();
+                return false;
+            }
+            
+            // Validate description
+            if (!description) {
+                e.preventDefault();
+                alert('Please describe what you need.');
+                document.getElementById('description').focus();
+                return false;
+            }
+            
+            // Validate location
+            if (!lat || !lng || lat === '0' || lng === '0') {
+                e.preventDefault();
+                alert('Please select your location on the map.');
+                return false;
+            }
+            
+            // Set the proper hidden fields based on selection
+            if (selectedServiceId.value) {
+                document.querySelector('input[name="service"]').value = selectedServiceId.value;
+                document.querySelector('input[name="custom_service_name"]').value = '';
+            } else if (customServiceName.value) {
+                document.querySelector('input[name="service"]').value = '';
+                document.querySelector('input[name="custom_service_name"]').value = customServiceName.value;
+            } else {
+                // User typed but didn't select - treat as custom service
+                document.querySelector('input[name="service"]').value = '';
+                document.querySelector('input[name="custom_service_name"]').value = serviceValue;
+            }
+        });
+    </script>
+    
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM&callback=initMap" async defer></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Job Completion</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1a1a2e; margin-bottom: 20px; }
+        .info-box {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>✅ Confirm Job Completion</h1>
+            <p>Has {{ service_request.provider.username }} completed the job?</p>
+            
+            <div class="info-box">
+                <strong>Service:</strong> 
+                {% if service_request.service %}
+                    {{ service_request.service.name }}
+                {% else %}
+                    {{ service_request.service_need.service_display }}
+                {% endif %}
+                <br>
+                <strong>Provider:</strong> {{ service_request.provider.username }}<br>
+                <strong>Amount:</strong> UGX {{ service_request.amount }}
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <label>Any feedback about the job?</label>
+                <textarea name="feedback" rows="3" placeholder="Optional: Share your experience..."></textarea>
+                
+                <button type="submit" class="btn btn-success">✓ Yes, Confirm Completion</button>
+                <a href="{% url 'service_request_detail' service_request.id %}" class="btn btn-secondary">← Back</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

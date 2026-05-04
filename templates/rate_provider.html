@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Provider</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1a1a2e; margin-bottom: 10px; }
+        .provider-info {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+        }
+        .stars-preview {
+            font-size: 24px;
+            letter-spacing: 5px;
+            color: #ddd;
+            margin-top: 10px;
+        }
+        .stars-preview.active {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>⭐ Rate Your Experience</h1>
+            <p>How was your experience with {{ service_request.provider.username }}?</p>
+            
+            <div class="provider-info">
+                <strong>Service:</strong> 
+                {% if service_request.service %}
+                    {{ service_request.service.name }}
+                {% else %}
+                    {{ service_request.service_need.service_display }}
+                {% endif %}
+                <br>
+                <strong>Amount Paid:</strong> UGX {{ service_request.amount }}
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Rating</label>
+                    {{ form.rating }}
+                </div>
+                
+                <div class="form-group">
+                    <label>Your Review (Optional)</label>
+                    {{ form.review }}
+                </div>
+                
+                <button type="submit" class="btn">Submit Rating</button>
+            </form>
+            
+            <a href="{% url 'service_request_detail' service_request.id %}" class="back-link">← Skip for now</a>
+        </div>
+    </div>
+    
+    <script>
+        const ratingSelect = document.querySelector('select[name="rating"]');
+        if (ratingSelect) {
+            ratingSelect.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                console.log('Selected rating:', value);
+            });
+        }
+    </script>
+</body>
+</html>
