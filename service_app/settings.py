@@ -13,9 +13,9 @@ ALLOWED_HOSTS = [
     ".railway.app",
     "localhost",
     "127.0.0.1",
-    "10.0.2.2",           # Android emulator
-    "192.168.1.%",        # Your local network
-    "*",                  # Development only
+    "10.0.2.2",
+    "192.168.1.%",
+    "*",
 ]
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_framework.authtoken',
     'rest_framework',
-    'corsheaders',  # ADDED
+    'corsheaders',
     
     'allauth',
     'allauth.account',
@@ -48,13 +48,14 @@ INSTALLED_APPS = [
 
 # 🔁 MIDDLEWARE
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # ADDED AT TOP
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'users.middleware.DynamicSiteMiddleware',  # Dynamic site domain
+    'users.middleware.DynamicSiteMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 ]
@@ -90,7 +91,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'service_app.wsgi.application'
 
-
+# 💾 DATABASE
 import dj_database_url
 
 DATABASES = {
@@ -111,52 +112,54 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# 📁 STATIC FILES
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# ========== ALLAUTH SETTINGS ==========
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False  # Auto-generate username from email
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
-# 📷 MEDIA FILES
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Social account settings
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
 
-# 🔄 LOGIN REDIRECTS
-LOGOUT_REDIRECT_URL = '/login/'
-LOGIN_REDIRECT_URL = '/redirect-after-login/'
-
-# Social Login - Google OAuth
-from decouple import config
-
+# Google OAuth
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID', default=''),
-            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
             'key': ''
         }
     }
 }
 
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = True
-SOCIALACCOUNT_LOGIN_ON_GET = True
+# Redirects
+LOGIN_REDIRECT_URL = '/redirect-after-login/'
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/'
 
-# Flutterwave Configuration
-FLUTTERWAVE_PUBLIC_KEY = config('FLUTTERWAVE_PUBLIC_KEY', default='')
-FLUTTERWAVE_SECRET_KEY = config('FLUTTERWAVE_SECRET_KEY', default='')
-FLUTTERWAVE_ENCRYPTION_KEY = config('FLUTTERWAVE_ENCRYPTION_KEY', default='')
-FLUTTERWAVE_ENVIRONMENT = config('FLUTTERWAVE_ENVIRONMENT', default='sandbox')
-FLUTTERWAVE_CALLBACK_URL = config('FLUTTERWAVE_CALLBACK_URL', default='')
+# 📁 STATIC FILES
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Dynamic callback URL based on domain
-def get_flutterwave_callback_url(request):
-    """Generate callback URL dynamically based on request domain"""
-    domain = request.get_host()
-    protocol = 'https' if request.is_secure() else 'http'
-    return f"{protocol}://{domain}/payment/callback/"
+# 📷 MEDIA FILES
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# 💰 FLUTTERWAVE CONFIGURATION
+FLUTTERWAVE_PUBLIC_KEY = os.environ.get('FLUTTERWAVE_PUBLIC_KEY', '')
+FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY', '')
+FLUTTERWAVE_ENCRYPTION_KEY = os.environ.get('FLUTTERWAVE_ENCRYPTION_KEY', '')
+FLUTTERWAVE_ENVIRONMENT = os.environ.get('FLUTTERWAVE_ENVIRONMENT', 'sandbox')
+FLUTTERWAVE_CALLBACK_URL = os.environ.get('FLUTTERWAVE_CALLBACK_URL', '')
 
 # 🔌 DRF
 REST_FRAMEWORK = {
@@ -169,10 +172,11 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Sites Framework
+# 🗺️ GOOGLE MAPS
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM')
+
+# 🌐 SITES FRAMEWORK
 if DEBUG:
     SITE_URL = 'http://127.0.0.1:8000'
 else:
     SITE_URL = 'https://buildimity.com'
-    # Google Maps API Key
-GOOGLE_MAPS_API_KEY = 'AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM'
