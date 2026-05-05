@@ -8,7 +8,6 @@ User = get_user_model()
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     """
     Custom adapter to handle existing email conflicts during Google login
-    and auto-generate usernames for new users
     """
     
     def pre_social_login(self, request, sociallogin):
@@ -16,17 +15,33 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         If a user with the same email already exists, connect the social account
         to the existing user instead of creating a new one.
         """
+        # Get the email from the social login
         email = sociallogin.account.extra_data.get('email')
         
         if not email:
             return
         
+        # Try to find an existing user with this email
         try:
             existing_user = User.objects.get(email=email)
-            # Connect the social account to the existing user
-            sociallogin.connect(request, existing_user)
+            
+            # Check if this social account is already connected
+            if not sociallogin.is_existing:
+                # Connect the social account to the existing user
+                sociallogin.connect(request, existing_user)
+                
+                # Also set the user on the sociallogin object
+                sociallogin.user = existing_user
+                
         except User.DoesNotExist:
+            # No existing user, will create new one
             pass
+        except User.MultipleObjectsReturned:
+            # Handle duplicates - use the first active user
+            existing_user = User.objects.filter(email=email).first()
+            if existing_user and not sociallogin.is_existing:
+                sociallogin.connect(request, existing_user)
+                sociallogin.user = existing_user
     
     def is_auto_signup_allowed(self, request, sociallogin):
         """
@@ -37,15 +52,17 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def populate_user(self, request, sociallogin, data):
         """
         Populate user with data from social provider
-        Auto-generate username from email if not provided
         """
         user = super().populate_user(request, sociallogin, data)
+        
+        # Set email from social login
+        if not user.email:
+            user.email = data.get('email', '')
         
         # Auto-generate username from email if username is empty
         if not user.username or user.username == '':
             email = user.email or data.get('email', '')
             if email:
-                # Take part before @ as username
                 username = email.split('@')[0]
                 # Remove special characters
                 username = ''.join(c for c in username if c.isalnum() or c == '_')
