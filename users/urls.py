@@ -115,6 +115,11 @@ path('payment/initialize/<int:request_id>/', views.initialize_flutterwave_paymen
 path('payment/callback/<str:tx_ref>/', views.payment_callback, name='payment_callback'),
 path('payment/webhook/flutterwave/', views.flutterwave_webhook, name='flutterwave_webhook'),
 path('payment/initialize/<int:request_id>/', views.initialize_flutterwave_payment, name='initialize_flutterwave_payment'),
+# PesaPal URLs
+path('payment/pesapal/initialize/<int:request_id>/', views.initialize_pesapal_payment, name='initialize_pesapal_payment'),
+path('payment/pesapal/callback/', views.pesapal_callback, name='pesapal_callback'),
+path('payment/pesapal/ipn/', views.pesapal_ipn, name='pesapal_ipn'),
+    
 path('request/<int:request_id>/payment/', views.make_payment, name='make_payment'),
 path('confirm-payment/<str:transaction_id>/', views.confirm_payment, name='confirm_payment'),
 ]
