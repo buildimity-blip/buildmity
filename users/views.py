@@ -2774,3 +2774,12 @@ def pesapal_ipn(request):
                 pass
     
     return HttpResponse('OK', status=200)
+
+@login_required
+def initialize_pesapal_payment(request, request_id):
+    print("=" * 50)
+    print("✅ PESAPAL PAYMENT INITIALIZED - This is the correct view!")
+    print("=" * 50)
+    # ... rest of code
+
+
