@@ -32,32 +32,11 @@
                         <div style="font-size: 12px; color: #64748b;">Pay with Mobile Money, Card, or Bank</div>
                     </div>
                 </div>
-                
-                <!-- Test Option -->
-                <div id="optionTest" onclick="selectMethod('test')" style="border: 2px solid #e2e8f0; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                    <input type="radio" name="method" id="radioTest" style="width: 18px; height: 18px;">
-                    <div style="font-size: 24px; width: 40px;"><i class="fas fa-flask" style="color: #22c55e;"></i></div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 700;">Test Payment (Demo)</div>
-                        <div style="font-size: 12px; color: #64748b;">For testing - No real money</div>
-                    </div>
-                </div>
             </div>
             
             <!-- PesaPal Info -->
             <div id="pesapalInfo" style="background: #dbeafe; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; border-left: 3px solid #2563eb;">
                 <i class="fas fa-external-link-alt"></i> You will be redirected to PesaPal's secure payment page
-            </div>
-            
-            <!-- Test Fields (hidden by default) -->
-            <div id="testFields" style="display: none;">
-                <div style="background: #fed7aa; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; border-left: 3px solid #f59e0b;">
-                    <i class="fas fa-flask"></i> <strong>Test Mode</strong> - No real money will be deducted
-                </div>
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 600;">Phone Number</label>
-                    <input type="tel" id="testPhoneNumber" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px;" placeholder="e.g., 0789123456">
-                </div>
             </div>
             
             <!-- Pay Button -->
@@ -134,111 +113,26 @@
         selectedMethod = method;
         
         const optionPesapal = document.getElementById('optionPesapal');
-        const optionTest = document.getElementById('optionTest');
         const pesapalInfo = document.getElementById('pesapalInfo');
-        const testFields = document.getElementById('testFields');
         
         if (method === 'pesapal') {
             optionPesapal.classList.add('selected-option');
-            optionTest.classList.remove('selected-option');
             document.getElementById('radioPesapal').checked = true;
             pesapalInfo.style.display = 'block';
-            testFields.style.display = 'none';
-        } else {
-            optionTest.classList.add('selected-option');
-            optionPesapal.classList.remove('selected-option');
-            document.getElementById('radioTest').checked = true;
-            pesapalInfo.style.display = 'none';
-            testFields.style.display = 'block';
         }
     }
     
     function processPayment() {
         if (!currentRequestData) return;
         
-        const payBtn = document.getElementById('payModalBtn');
-        
         if (selectedMethod === 'pesapal') {
             // Redirect to PesaPal
             window.location.href = `/payment/pesapal/initialize/${currentRequestData.id}/`;
-        } 
-        else if (selectedMethod === 'test') {
-            const phone = document.getElementById('testPhoneNumber').value;
-            
-            if (!phone) {
-                alert('Please enter your phone number for test payment');
-                return;
-            }
-            
-            // Show loading
-            const originalText = payBtn.innerHTML;
-            payBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-radius: 50%; border-top-color: transparent; animation: spin 0.5s linear infinite; vertical-align: middle;"></span> Processing...';
-            payBtn.disabled = true;
-            
-            // Make test payment
-            fetch(`/request/${currentRequestData.id}/payment/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "X-CSRFToken": getCsrfToken(),
-                    "X-Requested-With": "XMLHttpRequest"
-                },
-                body: `method=test&phone=${encodeURIComponent(phone)}&amount=${currentRequestData.amount}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showSuccessPopup(data.transaction_id);
-                } else {
-                    alert('Payment failed: ' + (data.message || 'Unknown error'));
-                    payBtn.innerHTML = originalText;
-                    payBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                alert('Payment error: ' + error);
-                payBtn.innerHTML = originalText;
-                payBtn.disabled = false;
-            });
         }
-    }
-    
-    function showSuccessPopup(transactionId) {
-        const popup = document.createElement('div');
-        popup.id = 'successPopup';
-        popup.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10001; display: flex; align-items: center; justify-content: center;';
-        popup.innerHTML = `
-            <div style="background: white; max-width: 350px; width: 90%; border-radius: 24px; padding: 24px; text-align: center;">
-                <div style="font-size: 60px; color: #22c55e;"><i class="fas fa-check-circle"></i></div>
-                <h3 style="margin: 12px 0 8px;">Payment Successful!</h3>
-                <p style="color: #64748b;">Test payment completed successfully</p>
-                <div style="background: #f8fafc; padding: 12px; border-radius: 12px; margin: 16px 0;">
-                    <p><strong>Amount:</strong> UGX ${parseFloat(currentRequestData.amount).toLocaleString()}</p>
-                    <p><strong>Reference:</strong> ${transactionId}</p>
-                </div>
-                <button onclick="confirmTestPayment('${transactionId}')" style="width: 100%; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Continue</button>
-            </div>
-        `;
-        document.body.appendChild(popup);
-    }
-    
-    function confirmTestPayment(transactionId) {
-        fetch(`/confirm-payment/${transactionId}/`, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": getCsrfToken()
-            }
-        })
-        .then(() => {
-            window.location.reload();
-        });
     }
     
     function closePaymentModal() {
         document.getElementById('paymentModal').style.display = 'none';
-        // Remove any leftover popups
-        const successPopup = document.getElementById('successPopup');
-        if (successPopup) successPopup.remove();
     }
     
     function getCsrfToken() {
@@ -272,9 +166,4 @@
             }
         }
     });
-    
-    // Add spin animation
-    const style = document.createElement('style');
-    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
-    document.head.appendChild(style);
 </script>
