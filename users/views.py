@@ -2232,246 +2232,263 @@ import hmac
 # ==================== PESAPAL PAYMENT INTEGRATION ====================
 
 # ==================== PESAPAL PAYMENT INTEGRATION ====================
-
-import base64
 import requests
+import time
+from decimal import Decimal
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, get_object_or_404
-from django.contrib import messages
-from decimal import Decimal
-import time
-# ==================== PESAPAL PAYMENT INTEGRATION ====================
+from django.utils import timezone
+
+# Make sure these models are already imported in your views.py
+# from .models import ServiceRequest, Payment, AdminNotification
+
+
+PESAPAL_SANDBOX_URL = "https://cybqa.pesapal.com/pesapalv3"
+PESAPAL_PRODUCTION_URL = "https://pay.pesapal.com/v3"
+
+
+def get_pesapal_base_url():
+    environment = getattr(settings, "PESAPAL_ENVIRONMENT", "sandbox")
+
+    if environment == "production":
+        return PESAPAL_PRODUCTION_URL
+
+    return PESAPAL_SANDBOX_URL
+
+
+def get_pesapal_token():
+    api_url = get_pesapal_base_url()
+    token_url = f"{api_url}/api/Auth/RequestToken"
+
+    consumer_key = getattr(settings, "PESAPAL_CONSUMER_KEY", "")
+    consumer_secret = getattr(settings, "PESAPAL_CONSUMER_SECRET", "")
+
+    payload = {
+        "consumer_key": consumer_key,
+        "consumer_secret": consumer_secret,
+    }
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        token_url,
+        json=payload,
+        headers=headers,
+        timeout=30
+    )
+
+    print("Pesapal Token Status:", response.status_code)
+    print("Pesapal Token Response:", response.text)
+
+    if response.status_code != 200:
+        return None
+
+    data = response.json()
+    return data.get("token")
+
 
 @login_required
 def initialize_pesapal_payment(request, request_id):
-    """Initialize payment with PesaPal - includes test mode fallback"""
     print("=" * 50)
     print("PESAPAL PAYMENT INITIALIZED")
     print("=" * 50)
-    
-    service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
-    # FORCE TEST MODE - Remove this line when PesaPal is working
-use_test_mode = True
-    # Get PesaPal credentials
-    PESAPAL_CONSUMER_KEY = getattr(settings, 'PESAPAL_CONSUMER_KEY', '')
-    PESAPAL_CONSUMER_SECRET = getattr(settings, 'PESAPAL_CONSUMER_SECRET', '')
-    PESAPAL_ENVIRONMENT = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox')
-    
-    # Check if we should use test mode
-    use_test_mode = request.GET.get('test', 'false') == 'true'
-    
-    if not PESAPAL_CONSUMER_KEY or not PESAPAL_CONSUMER_SECRET or use_test_mode:
-        messages.info(request, 'Using test payment mode. No real money will be charged.')
-        
-        # Create test payment
-        payment, created = Payment.objects.get_or_create(
-            service_request=service_request,
-            defaults={
-                'client': request.user,
-                'provider': service_request.provider,
-                'amount': service_request.amount,
-                'commission': service_request.amount * Decimal('0.10'),
-                'provider_amount': service_request.amount * Decimal('0.90'),
-                'transaction_id': f"TEST-{int(time.time())}",
-                'status': 'paid',
-                'method': 'test',
-                'paid_at': timezone.now(),
-            }
-        )
-        
-        if not created:
-            payment.status = 'paid'
-            payment.paid_at = timezone.now()
-            payment.save()
-        
-        service_request.status = 'paid'
-        service_request.save()
-        
-        if service_request.service_need:
-            service_request.service_need.status = 'paid'
-            service_request.service_need.save()
-        
-        AdminNotification.objects.create(
-            title='Test Payment Received',
-            message=f'Test payment of UGX {service_request.amount} received from {request.user.username}',
-            notification_type='payment',
-            related_user=service_request.provider
-        )
-        
-        messages.success(request, 'Test payment successful! The provider will start working on your request.')
-        return redirect('service_request_detail', request_id=service_request.id)
-    
-    # Try multiple API endpoints for PesaPal
-    api_endpoints = [
-        'https://cybqa.pesapal.com/pesapalv3',
-        'https://sandbox.pesapal.com/api',
-    ]
-    
+
+    service_request = get_object_or_404(
+        ServiceRequest,
+        id=request_id,
+        client=request.user
+    )
+
+    use_test_mode = request.GET.get("test", "false") == "true"
+
+    consumer_key = getattr(settings, "PESAPAL_CONSUMER_KEY", "")
+    consumer_secret = getattr(settings, "PESAPAL_CONSUMER_SECRET", "")
+
+    if use_test_mode or not consumer_key or not consumer_secret:
+        return process_test_payment(request, service_request)
+
     timestamp = int(time.time())
     merchant_reference = f"BUILD-{service_request.id}-{timestamp}"
-    
-    current_domain = request.get_host()
-    protocol = 'https' if request.is_secure() else 'http'
-    callback_url = f"{protocol}://{current_domain}/payment/pesapal/callback/"
-    
-    # Create payment record
+
+    protocol = "https" if request.is_secure() else "http"
+    domain = request.get_host()
+
+    callback_url = f"{protocol}://{domain}/payment/pesapal/callback/"
+
     payment, created = Payment.objects.get_or_create(
         service_request=service_request,
         defaults={
-            'client': request.user,
-            'provider': service_request.provider,
-            'amount': service_request.amount,
-            'commission': service_request.amount * Decimal('0.10'),
-            'provider_amount': service_request.amount * Decimal('0.90'),
-            'transaction_id': merchant_reference,
-            'status': 'pending',
-            'method': 'pesapal'
+            "client": request.user,
+            "provider": service_request.provider,
+            "amount": service_request.amount,
+            "commission": service_request.amount * Decimal("0.10"),
+            "provider_amount": service_request.amount * Decimal("0.90"),
+            "transaction_id": merchant_reference,
+            "status": "pending",
+            "method": "pesapal",
         }
     )
-    
-    # Try each API endpoint
-    for API_URL in api_endpoints:
-        print(f"Trying API URL: {API_URL}")
-        
-        try:
-            # Get access token
-            token_url = f"{API_URL}/api/Auth/RequestToken"
-            
-            auth_string = f"{PESAPAL_CONSUMER_KEY}:{PESAPAL_CONSUMER_SECRET}"
-            auth_bytes = auth_string.encode('utf-8')
-            auth_base64 = base64.b64encode(auth_bytes).decode('utf-8')
-            
-            headers = {
-                'Authorization': f'Basic {auth_base64}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-            
-            token_response = requests.post(token_url, headers=headers, timeout=30)
-            print(f"Token Response Status: {token_response.status_code}")
-            
-            if token_response.status_code == 200:
-                token_data = token_response.json()
-                access_token = token_data.get('token')
-                
-                # Submit order request
-                submit_order_url = f"{API_URL}/api/Transactions/SubmitOrderRequest"
-                
-                order_data = {
-                    "id": merchant_reference,
-                    "currency": "UGX",
-                    "amount": str(float(service_request.amount)),
-                    "description": f"Payment for service request #{service_request.id}",
-                    "callback_url": callback_url,
-                    "billing_address": {
-                        "email_address": request.user.email,
-                        "phone_number": request.user.phone_number or "0000000000",
-                        "country_code": "UG",
-                        "first_name": request.user.first_name or request.user.username,
-                        "last_name": request.user.last_name or "",
-                    }
-                }
-                
-                order_headers = {
-                    'Authorization': f'Bearer {access_token}',
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-                
-                order_response = requests.post(
-                    submit_order_url, 
-                    json=order_data, 
-                    headers=order_headers,
-                    timeout=30
-                )
-                
-                if order_response.status_code == 200:
-                    order_result = order_response.json()
-                    redirect_url = order_result.get('redirect_url')
-                    
-                    if redirect_url:
-                        payment.external_reference = order_result.get('pesapal_transaction_id', '')
-                        payment.save()
-                        return redirect(redirect_url)
-                        
-            print(f"Failed with {API_URL}, trying next...")
-            
-        except Exception as e:
-            print(f"Error with {API_URL}: {str(e)}")
-            continue
-    
-    # If all endpoints fail, fallback to test mode
-    messages.warning(request, 'PesaPal is currently unavailable. Using test mode.')
-    
-    payment.status = 'paid'
-    payment.paid_at = timezone.now()
+
+    if not created:
+        payment.transaction_id = merchant_reference
+        payment.status = "pending"
+        payment.method = "pesapal"
+        payment.save()
+
+    access_token = get_pesapal_token()
+
+    if not access_token:
+        messages.error(
+            request,
+            "Could not connect to Pesapal. Please check your Pesapal credentials or try test mode."
+        )
+        return redirect("service_request_detail", request_id=service_request.id)
+
+    api_url = get_pesapal_base_url()
+    submit_order_url = f"{api_url}/api/Transactions/SubmitOrderRequest"
+
+    phone_number = getattr(request.user, "phone_number", "") or "256700000000"
+
+    order_data = {
+        "id": merchant_reference,
+        "currency": "UGX",
+        "amount": float(service_request.amount),
+        "description": f"Payment for Buildmity service request #{service_request.id}",
+        "callback_url": callback_url,
+        "billing_address": {
+            "email_address": request.user.email or "client@buildmity.com",
+            "phone_number": phone_number,
+            "country_code": "UG",
+            "first_name": request.user.first_name or request.user.username,
+            "last_name": request.user.last_name or "",
+        }
+    }
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(
+        submit_order_url,
+        json=order_data,
+        headers=headers,
+        timeout=30
+    )
+
+    print("Pesapal Order Status:", response.status_code)
+    print("Pesapal Order Response:", response.text)
+
+    if response.status_code not in [200, 201]:
+        messages.error(request, "Pesapal failed to create the payment order.")
+        return redirect("service_request_detail", request_id=service_request.id)
+
+    result = response.json()
+    redirect_url = result.get("redirect_url")
+
+    if not redirect_url:
+        messages.error(request, "Pesapal did not return a payment link.")
+        return redirect("service_request_detail", request_id=service_request.id)
+
+    payment.external_reference = result.get("order_tracking_id", "")
     payment.save()
-    
-    service_request.status = 'paid'
+
+    return redirect(redirect_url)
+
+
+def process_test_payment(request, service_request):
+    payment, created = Payment.objects.get_or_create(
+        service_request=service_request,
+        defaults={
+            "client": request.user,
+            "provider": service_request.provider,
+            "amount": service_request.amount,
+            "commission": service_request.amount * Decimal("0.10"),
+            "provider_amount": service_request.amount * Decimal("0.90"),
+            "transaction_id": f"TEST-{int(time.time())}",
+            "status": "paid",
+            "method": "test",
+            "paid_at": timezone.now(),
+        }
+    )
+
+    if not created:
+        payment.status = "paid"
+        payment.method = "test"
+        payment.paid_at = timezone.now()
+        payment.save()
+
+    service_request.status = "paid"
     service_request.save()
-    
-    messages.success(request, 'Test payment successful! The provider will start working on your request.')
-    return redirect('service_request_detail', request_id=service_request.id)
+
+    if service_request.service_need:
+        service_request.service_need.status = "paid"
+        service_request.service_need.save()
+
+    AdminNotification.objects.create(
+        title="Test Payment Received",
+        message=f"Test payment of UGX {service_request.amount} received from {request.user.username}",
+        notification_type="payment",
+        related_user=service_request.provider
+    )
+
+    messages.success(
+        request,
+        "Test payment successful! The provider will start working on your request."
+    )
+
+    return redirect("service_request_detail", request_id=service_request.id)
 
 
 def pesapal_callback(request):
-    """Handle PesaPal payment callback"""
     print("PESAPAL CALLBACK CALLED")
-    print(f"GET params: {request.GET}")
-    
-    merchant_reference = request.GET.get('merchant_reference')
-    pesapal_transaction_id = request.GET.get('pesapal_transaction_id')
-    status = request.GET.get('status')
-    
-    if merchant_reference and status == 'COMPLETED':
-        try:
-            payment = Payment.objects.get(transaction_id=merchant_reference)
-            payment.status = 'paid'
-            payment.paid_at = timezone.now()
-            payment.external_reference = pesapal_transaction_id
-            payment.save()
-            
-            service_request = payment.service_request
-            service_request.status = 'paid'
-            service_request.save()
-            
-            if service_request.service_need:
-                service_request.service_need.status = 'paid'
-                service_request.service_need.save()
-            
-            messages.success(request, 'Payment successful! The provider will start working on your request.')
-            return redirect('service_request_detail', request_id=service_request.id)
-            
-        except Payment.DoesNotExist:
-            messages.error(request, 'Payment record not found.')
-    else:
-        messages.error(request, f'Payment failed or was cancelled.')
-    
-    return redirect('dashboard')
+    print("GET params:", request.GET)
+
+    order_tracking_id = request.GET.get("OrderTrackingId")
+    merchant_reference = request.GET.get("OrderMerchantReference")
+
+    if not merchant_reference:
+        messages.error(request, "Payment reference missing.")
+        return redirect("dashboard")
+
+    try:
+        payment = Payment.objects.get(transaction_id=merchant_reference)
+    except Payment.DoesNotExist:
+        messages.error(request, "Payment record not found.")
+        return redirect("dashboard")
+
+    payment.external_reference = order_tracking_id or payment.external_reference
+    payment.status = "paid"
+    payment.paid_at = timezone.now()
+    payment.save()
+
+    service_request = payment.service_request
+    service_request.status = "paid"
+    service_request.save()
+
+    if service_request.service_need:
+        service_request.service_need.status = "paid"
+        service_request.service_need.save()
+
+    messages.success(
+        request,
+        "Payment successful! The provider will start working on your request."
+    )
+
+    return redirect("service_request_detail", request_id=service_request.id)
 
 
 def pesapal_ipn(request):
-    """Handle PesaPal Instant Payment Notification"""
-    from django.http import HttpResponse
-    
-    if request.method == 'POST':
-        data = request.POST.dict()
-        merchant_reference = data.get('merchant_reference')
-        status = data.get('status')
-        
-        if merchant_reference and status == 'COMPLETED':
-            try:
-                payment = Payment.objects.get(transaction_id=merchant_reference)
-                payment.status = 'paid'
-                payment.paid_at = timezone.now()
-                payment.save()
-                
-                service_request = payment.service_request
-                service_request.status = 'paid'
-                service_request.save()
-            except Payment.DoesNotExist:
-                pass
-    
-    return HttpResponse('OK', status=200)
+    print("PESAPAL IPN CALLED")
+    print("GET params:", request.GET)
+    print("POST params:", request.POST)
 
-
+    return HttpResponse("OK")
