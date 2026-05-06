@@ -154,6 +154,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ========== PESAPAL CONFIGURATION ==========
+PESAPAL_CONSUMER_KEY = os.environ.get('PESAPAL_CONSUMER_KEY', '')
+PESAPAL_CONSUMER_SECRET = os.environ.get('PESAPAL_CONSUMER_SECRET', '')
+PESAPAL_ENVIRONMENT = os.environ.get('PESAPAL_ENVIRONMENT', 'sandbox')  # sandbox or live
+PESAPAL_CALLBACK_URL = os.environ.get('PESAPAL_CALLBACK_URL', '/payment/callback/')
+PESAPAL_IPN_URL = os.environ.get('PESAPAL_IPN_URL', '/payment/ipn/')
+
 # 💰 FLUTTERWAVE CONFIGURATION
 FLUTTERWAVE_PUBLIC_KEY = os.environ.get('FLUTTERWAVE_PUBLIC_KEY', '')
 FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY', '')
