@@ -2231,15 +2231,32 @@ import hmac
 
 # ==================== PESAPAL PAYMENT INTEGRATION ====================
 
+# ==================== PESAPAL PAYMENT INTEGRATION ====================
+
+import base64
+import requests
+from django.http import HttpResponse
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from decimal import Decimal
+import time
+
 @login_required
 def initialize_pesapal_payment(request, request_id):
     """Initialize payment with PesaPal"""
+    print("=" * 50)
+    print("✅ PESAPAL PAYMENT INITIALIZED - This is the correct view!")
+    print("=" * 50)
+    
     service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
     
-    # Get PesaPal credentials
+    # Get PesaPal credentials from settings
     PESAPAL_CONSUMER_KEY = getattr(settings, 'PESAPAL_CONSUMER_KEY', '')
     PESAPAL_CONSUMER_SECRET = getattr(settings, 'PESAPAL_CONSUMER_SECRET', '')
     PESAPAL_ENVIRONMENT = getattr(settings, 'PESAPAL_ENVIRONMENT', 'sandbox')
+    
+    print(f"PesaPal Consumer Key exists: {bool(PESAPAL_CONSUMER_KEY)}")
+    print(f"PesaPal Environment: {PESAPAL_ENVIRONMENT}")
     
     if not PESAPAL_CONSUMER_KEY or not PESAPAL_CONSUMER_SECRET:
         messages.error(request, 'PesaPal not configured. Please contact support.')
@@ -2252,15 +2269,20 @@ def initialize_pesapal_payment(request, request_id):
         API_URL = 'https://cybqa.pesapal.com/pesapalv3'
     
     # Generate unique transaction reference
-    merchant_reference = f"BUILD-{service_request.id}-{int(timezone.now().timestamp())}"
+    timestamp = int(time.time())
+    merchant_reference = f"BUILD-{service_request.id}-{timestamp}"
     
-    # Prepare payment data
+    # Prepare callback URL
     current_domain = request.get_host()
     protocol = 'https' if request.is_secure() else 'http'
     callback_url = f"{protocol}://{current_domain}/payment/pesapal/callback/"
     ipn_url = f"{protocol}://{current_domain}/payment/pesapal/ipn/"
     
-    # Create payment record
+    print(f"Callback URL: {callback_url}")
+    print(f"Amount: {service_request.amount}")
+    print(f"Merchant Reference: {merchant_reference}")
+    
+    # Create or update payment record
     payment, created = Payment.objects.get_or_create(
         service_request=service_request,
         defaults={
@@ -2282,11 +2304,14 @@ def initialize_pesapal_payment(request, request_id):
     
     # Get access token from PesaPal
     token_url = f"{API_URL}/api/Auth/RequestToken"
-    token_credentials = f"{PESAPAL_CONSUMER_KEY}:{PESAPAL_CONSUMER_SECRET}"
-    token_encoded = base64.b64encode(token_credentials.encode()).decode()
+    
+    # Create Basic Auth header
+    auth_string = f"{PESAPAL_CONSUMER_KEY}:{PESAPAL_CONSUMER_SECRET}"
+    auth_bytes = auth_string.encode('utf-8')
+    auth_base64 = base64.b64encode(auth_bytes).decode('utf-8')
     
     headers = {
-        'Authorization': f'Basic {token_encoded}',
+        'Authorization': f'Basic {auth_base64}',
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     }
@@ -2294,10 +2319,12 @@ def initialize_pesapal_payment(request, request_id):
     try:
         # Get token
         token_response = requests.post(token_url, headers=headers, timeout=30)
+        print(f"Token Response Status: {token_response.status_code}")
         
         if token_response.status_code == 200:
             token_data = token_response.json()
             access_token = token_data.get('token')
+            print("✅ Got PesaPal access token")
             
             # Submit order request
             submit_order_url = f"{API_URL}/api/Transactions/SubmitOrderRequest"
@@ -2308,7 +2335,7 @@ def initialize_pesapal_payment(request, request_id):
                 "amount": str(float(service_request.amount)),
                 "description": f"Payment for service request #{service_request.id}",
                 "callback_url": callback_url,
-                "notification_id": None,  # You can set up IPN later
+                "notification_id": None,
                 "billing_address": {
                     "email_address": request.user.email,
                     "phone_number": request.user.phone_number or "0000000000",
@@ -2331,27 +2358,46 @@ def initialize_pesapal_payment(request, request_id):
                 timeout=30
             )
             
+            print(f"Order Response Status: {order_response.status_code}")
+            
             if order_response.status_code == 200:
                 order_result = order_response.json()
                 redirect_url = order_result.get('redirect_url')
+                print(f"Redirect URL: {redirect_url}")
                 
                 if redirect_url:
+                    # Save the pesapal transaction id
+                    payment.external_reference = order_result.get('pesapal_transaction_id', '')
+                    payment.save()
                     return redirect(redirect_url)
                 else:
                     messages.error(request, 'No redirect URL received from PesaPal')
+                    return redirect('make_payment', request_id=request_id)
             else:
                 messages.error(request, f'Order submission failed: {order_response.text}')
+                return redirect('make_payment', request_id=request_id)
         else:
             messages.error(request, f'Failed to get PesaPal token: {token_response.text}')
+            return redirect('make_payment', request_id=request_id)
             
+    except requests.exceptions.Timeout:
+        messages.error(request, 'PesaPal gateway timed out. Please try again.')
+        return redirect('make_payment', request_id=request_id)
+    except requests.exceptions.ConnectionError:
+        messages.error(request, 'Cannot connect to PesaPal gateway. Please check your connection.')
+        return redirect('make_payment', request_id=request_id)
     except Exception as e:
         messages.error(request, f'PesaPal error: {str(e)}')
-    
-    return redirect('make_payment', request_id=request_id)
-
+        print(f"Exception: {str(e)}")
+        return redirect('make_payment', request_id=request_id)
 
 def pesapal_callback(request):
     """Handle PesaPal payment callback"""
+    print("=" * 50)
+    print("PESAPAL CALLBACK CALLED")
+    print(f"GET params: {request.GET}")
+    print("=" * 50)
+    
     merchant_reference = request.GET.get('merchant_reference')
     pesapal_transaction_id = request.GET.get('pesapal_transaction_id')
     status = request.GET.get('status')
@@ -2389,30 +2435,20 @@ def pesapal_ipn(request):
         data = request.POST.dict()
         merchant_reference = data.get('merchant_reference')
         status = data.get('status')
-        pesapal_transaction_id = data.get('pesapal_transaction_id')
         
         if merchant_reference and status == 'COMPLETED':
             try:
                 payment = Payment.objects.get(transaction_id=merchant_reference)
                 payment.status = 'paid'
                 payment.paid_at = timezone.now()
-                payment.external_reference = pesapal_transaction_id
                 payment.save()
                 
                 service_request = payment.service_request
                 service_request.status = 'paid'
                 service_request.save()
-                
             except Payment.DoesNotExist:
                 pass
     
     return HttpResponse('OK', status=200)
-
-@login_required
-def initialize_pesapal_payment(request, request_id):
-    print("=" * 50)
-    print("✅ PESAPAL PAYMENT INITIALIZED - This is the correct view!")
-    print("=" * 50)
-    # ... rest of code
 
 
