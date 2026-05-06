@@ -2250,7 +2250,8 @@ def initialize_pesapal_payment(request, request_id):
     print("=" * 50)
     
     service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
-    
+    # FORCE TEST MODE - Remove this line when PesaPal is working
+use_test_mode = True
     # Get PesaPal credentials
     PESAPAL_CONSUMER_KEY = getattr(settings, 'PESAPAL_CONSUMER_KEY', '')
     PESAPAL_CONSUMER_SECRET = getattr(settings, 'PESAPAL_CONSUMER_SECRET', '')
