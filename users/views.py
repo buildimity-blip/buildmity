@@ -2490,5 +2490,6 @@ def pesapal_ipn(request):
     print("PESAPAL IPN CALLED")
     print("GET params:", request.GET)
     print("POST params:", request.POST)
-
+    print("KEY:", settings.PESAPAL_CONSUMER_KEY)
+    print("SECRET:", settings.PESAPAL_CONSUMER_SECRET)
     return HttpResponse("OK")
