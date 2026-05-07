@@ -3149,6 +3149,279 @@ def notification_preferences(request):
         return redirect('notification_preferences')
     
     return render(request, 'notification_preferences.html', {'preferences': preferences})
+ ==================== LIVE GPS LOCATION TRACKING ====================
+
+@login_required
+def update_live_location(request):
+    """Update user's live GPS location via AJAX"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            accuracy = data.get('accuracy', 0)
+            
+            if latitude and longitude:
+                # Update user's location
+                request.user.latitude = Decimal(str(latitude))
+                request.user.longitude = Decimal(str(longitude))
+                request.user.last_location_update = timezone.now()
+                request.user.save()
+                
+                # Log location update for admin tracking
+                LocationHistory.objects.create(
+                    user=request.user,
+                    latitude=Decimal(str(latitude)),
+                    longitude=Decimal(str(longitude)),
+                    accuracy=accuracy
+                )
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Location updated',
+                    'timestamp': timezone.now().isoformat()
+                })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+@login_required
+def get_user_location(request, user_id):
+    """Get live location of a specific user (for admin or service provider)"""
+    target_user = get_object_or_404(User, id=user_id)
+    
+    # Permission check: admin can see all, provider can see client, client can see provider
+    if not (request.user.is_staff or 
+            (request.user.role == User.PROVIDER and target_user.role == User.CLIENT) or
+            (request.user.role == User.CLIENT and target_user.role == User.PROVIDER)):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    if target_user.latitude and target_user.longitude:
+        # Calculate distance from current user if they have location
+        distance = None
+        if request.user.latitude and request.user.longitude and request.user != target_user:
+            distance = calculate_distance(
+                float(request.user.latitude), float(request.user.longitude),
+                float(target_user.latitude), float(target_user.longitude)
+            )
+        
+        return JsonResponse({
+            'status': 'success',
+            'user_id': target_user.id,
+            'username': target_user.username,
+            'latitude': float(target_user.latitude),
+            'longitude': float(target_user.longitude),
+            'last_update': target_user.last_location_update.isoformat() if target_user.last_location_update else None,
+            'distance_km': round(distance, 2) if distance else None,
+            'is_online': target_user.last_location_update and (timezone.now() - target_user.last_location_update).seconds < 300
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Location not available'}, status=404)
+
+
+@staff_member_required
+def admin_location_tracker(request):
+    """Admin dashboard to see all active user locations on a map"""
+    # Get all active users with recent locations (last 30 minutes)
+    time_threshold = timezone.now() - timedelta(minutes=30)
+    
+    providers = User.objects.filter(
+        role=User.PROVIDER,
+        is_active=True,
+        is_suspended=False,
+        last_location_update__gte=time_threshold
+    ).values('id', 'username', 'latitude', 'longitude', 'last_location_update', 'is_verified')
+    
+    clients = User.objects.filter(
+        role=User.CLIENT,
+        is_active=True,
+        is_suspended=False,
+        last_location_update__gte=time_threshold
+    ).values('id', 'username', 'latitude', 'longitude', 'last_location_update')
+    
+    context = {
+        'providers': list(providers),
+        'clients': list(clients),
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+    }
+    return render(request, 'admin/location_tracker.html', context)
+
+
+@staff_member_required
+def user_location_history(request, user_id):
+    """View location history for a specific user (admin only)"""
+    user_obj = get_object_or_404(User, id=user_id)
+    
+    # Get location history from last 24 hours
+    time_threshold = timezone.now() - timedelta(hours=24)
+    locations = LocationHistory.objects.filter(
+        user=user_obj,
+        created_at__gte=time_threshold
+    ).order_by('-created_at')
+    
+    context = {
+        'target_user': user_obj,
+        'locations': locations,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+    }
+    return render(request, 'admin/user_location_history.html', context)
+
+
+@login_required
+def nearby_providers_live(request):
+    """Get nearby providers with live location tracking"""
+    latitude = request.GET.get('lat')
+    longitude = request.GET.get('lng')
+    radius = int(request.GET.get('radius', 10))
+    service_id = request.GET.get('service_id')
+    
+    if not latitude or not longitude:
+        if request.user.latitude and request.user.longitude:
+            latitude = request.user.latitude
+            longitude = request.user.longitude
+        else:
+            # Get from IP or default to Kampala
+            latitude = 0.3136
+            longitude = 32.5811
+    
+    # Get providers with recent location updates (last 10 minutes)
+    time_threshold = timezone.now() - timedelta(minutes=10)
+    
+    providers = User.objects.filter(
+        role=User.PROVIDER,
+        is_verified=True,
+        is_active=True,
+        is_suspended=False,
+        last_location_update__gte=time_threshold
+    )
+    
+    if service_id:
+        providers = providers.filter(services__id=service_id)
+    
+    # Calculate distances and filter by radius
+    nearby = []
+    for provider in providers:
+        if provider.latitude and provider.longitude:
+            distance = calculate_distance(
+                float(latitude), float(longitude),
+                float(provider.latitude), float(provider.longitude)
+            )
+            if distance <= radius:
+                nearby.append({
+                    'id': provider.id,
+                    'username': provider.username,
+                    'service': provider.get_services_list(),
+                    'rating': float(provider.average_rating) if provider.average_rating else 0,
+                    'distance_km': round(distance, 2),
+                    'latitude': float(provider.latitude),
+                    'longitude': float(provider.longitude),
+                    'profile_photo': provider.profile_photo.url if provider.profile_photo else None,
+                    'is_online': True,
+                    'last_active': provider.last_location_update.isoformat() if provider.last_location_update else None,
+                })
+    
+    # Sort by distance
+    nearby.sort(key=lambda x: x['distance_km'])
+    
+    return JsonResponse({
+        'status': 'success',
+        'providers': nearby,
+        'user_location': {'lat': float(latitude), 'lng': float(longitude)},
+        'count': len(nearby),
+        'radius': radius
+    })
+
+
+@login_required
+def track_service_location(request, request_id):
+    """Track location of both client and provider for an active service request"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id)
+    
+    # Verify user is involved in this request
+    if request.user not in [service_request.client, service_request.provider] and not request.user.is_staff:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
+    # Get client location
+    client_location = None
+    if service_request.client.latitude and service_request.client.longitude:
+        client_location = {
+            'lat': float(service_request.client.latitude),
+            'lng': float(service_request.client.longitude),
+            'last_update': service_request.client.last_location_update.isoformat() if service_request.client.last_location_update else None,
+            'is_online': service_request.client.last_location_update and (timezone.now() - service_request.client.last_location_update).seconds < 300
+        }
+    
+    # Get provider location
+    provider_location = None
+    if service_request.provider.latitude and service_request.provider.longitude:
+        provider_location = {
+            'lat': float(service_request.provider.latitude),
+            'lng': float(service_request.provider.longitude),
+            'last_update': service_request.provider.last_location_update.isoformat() if service_request.provider.last_location_update else None,
+            'is_online': service_request.provider.last_location_update and (timezone.now() - service_request.provider.last_location_update).seconds < 300
+        }
+    
+    # Calculate distance between them
+    distance = None
+    if client_location and provider_location:
+        distance = calculate_distance(
+            client_location['lat'], client_location['lng'],
+            provider_location['lat'], provider_location['lng']
+        )
+    
+    return JsonResponse({
+        'status': 'success',
+        'service_request_id': service_request.id,
+        'status': service_request.status,
+        'client': {
+            'id': service_request.client.id,
+            'username': service_request.client.username,
+            'location': client_location,
+            'phone': service_request.client.phone_number,
+        },
+        'provider': {
+            'id': service_request.provider.id,
+            'username': service_request.provider.username,
+            'location': provider_location,
+            'phone': service_request.provider.phone_number,
+        },
+        'distance_km': round(distance, 2) if distance else None,
+        'service_address': service_request.service_need.location if service_request.service_need else None,
+    })
+
+
+# Add this model to your models.py
+class LocationHistory(models.Model):
+    """Store historical location data for users"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='location_history')
+    latitude = models.DecimalField(max_digits=10, decimal_places=7)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7)
+    accuracy = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.created_at}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
