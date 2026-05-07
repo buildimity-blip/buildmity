@@ -702,3 +702,286 @@ class CompletionPhoto(models.Model):
     
     def __str__(self):
         return f"Photo for Request #{self.service_request.id}"
+
+# Add these to your existing models.py
+
+# ==================== CHAT/MESSAGING SYSTEM ====================
+
+class Conversation(models.Model):
+    """Chat conversation between client and provider"""
+    service_request = models.ForeignKey('ServiceRequest', on_delete=models.CASCADE, related_name='conversations', null=True, blank=True)
+    participants = models.ManyToManyField(User, related_name='conversations')
+    title = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Conversation {self.id} - {self.participants.count()} participants"
+    
+    class Meta:
+        ordering = ['-updated_at']
+
+
+class Message(models.Model):
+    """Individual messages in a conversation"""
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    attachment = models.FileField(upload_to='chat_attachments/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Message from {self.sender.username} at {self.created_at}"
+    
+    class Meta:
+        ordering = ['created_at']
+
+
+# ==================== BOOKING/SCHEDULING SYSTEM ====================
+
+class Booking(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('rescheduled', 'Rescheduled'),
+    ]
+    
+    service_request = models.OneToOneField('ServiceRequest', on_delete=models.CASCADE, related_name='booking')
+    scheduled_date = models.DateField()
+    scheduled_time = models.TimeField()
+    duration_hours = models.IntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    provider_notes = models.TextField(blank=True)
+    client_notes = models.TextField(blank=True)
+    reschedule_reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Booking for Request #{self.service_request.id}"
+
+
+class ProviderAvailability(models.Model):
+    DAYS_OF_WEEK = [
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    ]
+    
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='availability')
+    day_of_week = models.IntegerField(choices=DAYS_OF_WEEK)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_available = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['provider', 'day_of_week']
+        ordering = ['day_of_week', 'start_time']
+    
+    def __str__(self):
+        return f"{self.provider.username} - {self.get_day_of_week_display()}: {self.start_time} to {self.end_time}"
+
+
+class ProviderTimeOff(models.Model):
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='time_off')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.CharField(max_length=200, blank=True)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.provider.username} Time Off: {self.start_date} to {self.end_date}"
+
+
+# ==================== INVOICE SYSTEM ====================
+
+class Invoice(models.Model):
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('sent', 'Sent'),
+        ('paid', 'Paid'),
+        ('overdue', 'Overdue'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    service_request = models.OneToOneField('ServiceRequest', on_delete=models.CASCADE, related_name='invoice')
+    invoice_number = models.CharField(max_length=50, unique=True)
+    issue_date = models.DateField(auto_now_add=True)
+    due_date = models.DateField()
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    notes = models.TextField(blank=True)
+    terms = models.TextField(blank=True, default="Payment due within 14 days")
+    pdf_file = models.FileField(upload_to='invoices/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            year = timezone.now().year
+            month = timezone.now().month
+            count = Invoice.objects.filter(created_at__year=year, created_at__month=month).count() + 1
+            self.invoice_number = f"INV-{year}{month:02d}-{count:04d}"
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Invoice {self.invoice_number} - {self.service_request.id}"
+
+
+# ==================== PROMO CODES ====================
+
+class PromoCode(models.Model):
+    DISCOUNT_TYPES = [
+        ('percentage', 'Percentage'),
+        ('fixed', 'Fixed Amount'),
+    ]
+    
+    code = models.CharField(max_length=50, unique=True)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2)
+    max_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Maximum discount amount for percentage discounts")
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    usage_limit = models.IntegerField(default=1, help_text="Maximum number of times this code can be used")
+    used_count = models.IntegerField(default=0)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_promos')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def is_valid(self):
+        now = timezone.now()
+        return (self.is_active and 
+                self.used_count < self.usage_limit and 
+                self.valid_from <= now <= self.valid_to)
+    
+    def calculate_discount(self, amount):
+        if not self.is_valid():
+            return 0
+        if amount < self.min_order_amount:
+            return 0
+        if self.discount_type == 'percentage':
+            discount = amount * (self.discount_value / 100)
+            if self.max_discount:
+                discount = min(discount, self.max_discount)
+            return discount
+        else:
+            return min(self.discount_value, amount)
+    
+    def __str__(self):
+        return f"{self.code} - {self.discount_value}{'%' if self.discount_type == 'percentage' else ' UGX'}"
+
+
+class AppliedPromo(models.Model):
+    promo_code = models.ForeignKey(PromoCode, on_delete=models.CASCADE)
+    service_request = models.ForeignKey('ServiceRequest', on_delete=models.CASCADE, related_name='applied_promos')
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    final_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    applied_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Promo {self.promo_code.code} applied to Request #{self.service_request.id}"
+
+
+# ==================== WITHDRAWAL SYSTEM ====================
+
+class WithdrawalRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    METHOD_CHOICES = [
+        ('mobile_money', 'Mobile Money'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('paypal', 'PayPal'),
+    ]
+    
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='withdrawal_requests')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    account_details = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_notes = models.TextField(blank=True)
+    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_withdrawals')
+    transaction_reference = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Withdrawal #{self.id} - {self.provider.username} - UGX {self.amount}"
+
+
+# ==================== FAVORITE PROVIDERS ====================
+
+class FavoriteProvider(models.Model):
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_providers')
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['client', 'provider']
+    
+    def __str__(self):
+        return f"{self.client.username} favorites {self.provider.username}"
+
+
+# ==================== SAVED LOCATIONS ====================
+
+class SavedLocation(models.Model):
+    LOCATION_TYPES = [
+        ('home', 'Home'),
+        ('work', 'Work'),
+        ('other', 'Other'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_locations')
+    name = models.CharField(max_length=100)
+    location_type = models.CharField(max_length=20, choices=LOCATION_TYPES, default='other')
+    address = models.TextField()
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+
+
+# ==================== NOTIFICATION PREFERENCES ====================
+
+class NotificationPreference(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_preferences')
+    email_notifications = models.BooleanField(default=True)
+    push_notifications = models.BooleanField(default=True)
+    sms_notifications = models.BooleanField(default=False)
+    
+    # Specific notification types
+    new_message = models.BooleanField(default=True)
+    booking_confirmed = models.BooleanField(default=True)
+    payment_received = models.BooleanField(default=True)
+    job_completed = models.BooleanField(default=True)
+    promo_offers = models.BooleanField(default=True)
+    review_received = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Notification preferences for {self.user.username}"
