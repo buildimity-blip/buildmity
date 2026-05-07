@@ -1,28 +1,14 @@
 import os
 from pathlib import Path
 
-
-load_dotenv()
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-from pathlib import Path
-
+# Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 🔐 SECURITY
-SECRET_KEY = 'dev-secret-key'
-DEBUG = True
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    "buildimity.com",
-    "www.buildimity.com",
-    ".railway.app",
-    "localhost",
-    "127.0.0.1",
-    "10.0.2.2",
-    "192.168.1.%",
-    "*",
-]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'buildimity.com,www.buildimity.com,.railway.app,localhost,127.0.0.1').split(',')
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
@@ -67,12 +53,14 @@ MIDDLEWARE = [
 ]
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://10.0.2.2:8000",
+    "https://buildimity.com",
+    "https://www.buildimity.com",
+    "https://buildmity-production.up.railway.app",
 ]
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
 CORS_ALLOW_HEADERS = ['accept', 'accept-encoding', 'authorization', 'content-type', 'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with']
@@ -102,9 +90,9 @@ import dj_database_url
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:VuoenCfAicFsXMmRPiSGSmvMuTmnTHMP@interchange.proxy.rlwy.net:37163/railway',
+        default=os.environ.get('DATABASE_URL', 'postgresql://postgres:VuoenCfAicFsXMmRPiSGSmvMuTmnTHMP@interchange.proxy.rlwy.net:37163/railway'),
         conn_max_age=600,
-        ssl_require=False
+        ssl_require=not DEBUG,
     )
 }
 
@@ -120,10 +108,10 @@ AUTHENTICATION_BACKENDS = [
 
 # ========== ALLAUTH SETTINGS ==========
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False  # Auto-generate username from email
+ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 
 # Social account settings
 SOCIALACCOUNT_AUTO_SIGNUP = True
@@ -163,11 +151,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ========== PESAPAL CONFIGURATION ==========
 PESAPAL_CONSUMER_KEY = os.environ.get('PESAPAL_CONSUMER_KEY', '')
 PESAPAL_CONSUMER_SECRET = os.environ.get('PESAPAL_CONSUMER_SECRET', '')
-PESAPAL_ENVIRONMENT = os.environ.get('PESAPAL_ENVIRONMENT', 'sandbox')  # sandbox or live
-PESAPAL_CALLBACK_URL = os.environ.get('PESAPAL_CALLBACK_URL', '/payment/callback/')
-PESAPAL_IPN_URL = os.environ.get('PESAPAL_IPN_URL', '/payment/ipn/')
+PESAPAL_ENVIRONMENT = os.environ.get('PESAPAL_ENVIRONMENT', 'sandbox')
 
-# 💰 FLUTTERWAVE CONFIGURATION
+# 💰 FLUTTERWAVE CONFIGURATION (Deprecated - kept for backward compatibility)
 FLUTTERWAVE_PUBLIC_KEY = os.environ.get('FLUTTERWAVE_PUBLIC_KEY', '')
 FLUTTERWAVE_SECRET_KEY = os.environ.get('FLUTTERWAVE_SECRET_KEY', '')
 FLUTTERWAVE_ENCRYPTION_KEY = os.environ.get('FLUTTERWAVE_ENCRYPTION_KEY', '')
