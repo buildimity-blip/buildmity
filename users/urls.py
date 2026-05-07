@@ -154,4 +154,12 @@ path('locations/delete/<int:location_id>/', views.delete_saved_location, name='d
 # Notifications URLs
 path('notifications/', views.notification_center, name='notification_center'),
 path('notifications/preferences/', views.notification_preferences, name='notification_preferences'),
+    # Live Location Tracking URLs
+path('api/location/update/', views.update_live_location, name='update_live_location'),
+path('api/location/get/<int:user_id>/', views.get_user_location, name='get_user_location'),
+path('admin/location/tracker/', views.admin_location_tracker, name='admin_location_tracker'),
+path('admin/location/history/<int:user_id>/', views.user_location_history, name='user_location_history'),
+path('api/providers/nearby-live/', views.nearby_providers_live, name='nearby_providers_live'),
+path('api/service/<int:request_id>/track/', views.track_service_location, name='track_service_location'),
+]
 ]
