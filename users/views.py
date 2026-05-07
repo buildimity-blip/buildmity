@@ -5,6 +5,7 @@ import base64
 from datetime import datetime
 from decimal import Decimal
 from django.contrib import messages
+from django.db.models import Subquery, OuterRef, Count, Sum, Avg, Q, F
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, authenticate, logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -2228,268 +2229,990 @@ import hmac
 
 # Add these to your views.py
 
-
-# ==================== PESAPAL PAYMENT INTEGRATION ====================
-
-# ==================== PESAPAL PAYMENT INTEGRATION ====================
-import requests
-import time
-from decimal import Decimal
-
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.shortcuts import redirect, get_object_or_404
-from django.utils import timezone
-
-# Make sure these models are already imported in your views.py
-# from .models import ServiceRequest, Payment, AdminNotification
-
-
-PESAPAL_SANDBOX_URL = "https://cybqa.pesapal.com/pesapalv3"
-PESAPAL_PRODUCTION_URL = "https://pay.pesapal.com/v3"
-
-
-def get_pesapal_base_url():
-    environment = getattr(settings, "PESAPAL_ENVIRONMENT", "sandbox")
-
-    if environment == "production":
-        return PESAPAL_PRODUCTION_URL
-
-    return PESAPAL_SANDBOX_URL
-
-
-def get_pesapal_token():
-    api_url = get_pesapal_base_url()
-    token_url = f"{api_url}/api/Auth/RequestToken"
-
-    consumer_key = getattr(settings, "PESAPAL_CONSUMER_KEY", "")
-    consumer_secret = getattr(settings, "PESAPAL_CONSUMER_SECRET", "")
-
-    payload = {
-        "consumer_key": consumer_key,
-        "consumer_secret": consumer_secret,
-    }
-
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.post(
-        token_url,
-        json=payload,
-        headers=headers,
-        timeout=30
-    )
-
-    print("Pesapal Token Status:", response.status_code)
-    print("Pesapal Token Response:", response.text)
-
-    if response.status_code != 200:
-        return None
-
-    data = response.json()
-    return data.get("token")
-
-
 @login_required
-def initialize_pesapal_payment(request, request_id):
-    print("=" * 50)
-    print("PESAPAL PAYMENT INITIALIZED")
-    print("=" * 50)
-
-    service_request = get_object_or_404(
-        ServiceRequest,
-        id=request_id,
-        client=request.user
-    )
-
-    use_test_mode = request.GET.get("test", "false") == "true"
-
-    consumer_key = getattr(settings, "PESAPAL_CONSUMER_KEY", "")
-    consumer_secret = getattr(settings, "PESAPAL_CONSUMER_SECRET", "")
-
-    if use_test_mode or not consumer_key or not consumer_secret:
+def initialize_flutterwave_payment(request, request_id):
+    """Initialize payment with Flutterwave - works for all domains"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
+    
+    # Get Flutterwave credentials
+    FLUTTERWAVE_SECRET_KEY = getattr(settings, 'FLUTTERWAVE_SECRET_KEY', '')
+    FLUTTERWAVE_PUBLIC_KEY = getattr(settings, 'FLUTTERWAVE_PUBLIC_KEY', '')
+    
+    if not FLUTTERWAVE_SECRET_KEY:
+        # Fallback to test mode
         return process_test_payment(request, service_request)
-
-    timestamp = int(time.time())
-    merchant_reference = f"BUILD-{service_request.id}-{timestamp}"
-
-    protocol = "https" if request.is_secure() else "http"
-    domain = request.get_host()
-
-    callback_url = f"{protocol}://{domain}/payment/pesapal/callback/"
-
+    
+    # Generate dynamic callback URL based on current domain
+    current_domain = request.get_host()
+    protocol = 'https' if request.is_secure() else 'http'
+    callback_url = f"{protocol}://{current_domain}/payment/callback/"
+    
+    # Generate unique transaction reference
+    tx_ref = f"BUILD-{service_request.id}-{int(timezone.now().timestamp())}"
+    
+    # Prepare payment data
+    payment_data = {
+        "tx_ref": tx_ref,
+        "amount": str(float(service_request.amount)),
+        "currency": "UGX",
+        "redirect_url": callback_url,
+        "payment_options": "card,mobilemoney,ussd",
+        "meta": {
+            "consumer_id": request.user.id,
+            "service_request_id": service_request.id,
+            "domain": current_domain,
+        },
+        "customer": {
+            "email": request.user.email,
+            "phonenumber": request.user.phone_number or "0000000000",
+            "name": request.user.get_full_name() or request.user.username,
+        },
+        "customizations": {
+            "title": "Buildimity Payment",
+            "description": f"Payment for service request #{service_request.id}",
+            "logo": f"{protocol}://{current_domain}/static/images/logo.png"
+        }
+    }
+    
+    # Create or update payment record
     payment, created = Payment.objects.get_or_create(
         service_request=service_request,
         defaults={
-            "client": request.user,
-            "provider": service_request.provider,
-            "amount": service_request.amount,
-            "commission": service_request.amount * Decimal("0.10"),
-            "provider_amount": service_request.amount * Decimal("0.90"),
-            "transaction_id": merchant_reference,
-            "status": "pending",
-            "method": "pesapal",
+            'client': request.user,
+            'provider': service_request.provider,
+            'amount': service_request.amount,
+            'commission': service_request.amount * Decimal('0.10'),
+            'provider_amount': service_request.amount * Decimal('0.90'),
+            'transaction_id': tx_ref,
+            'status': 'pending',
+            'method': 'flutterwave',
+            'external_reference': f"REQ-{service_request.id}"
         }
     )
-
+    
     if not created:
-        payment.transaction_id = merchant_reference
-        payment.status = "pending"
-        payment.method = "pesapal"
+        payment.transaction_id = tx_ref
+        payment.status = 'pending'
         payment.save()
-
-    access_token = get_pesapal_token()
-
-    if not access_token:
-        messages.error(
-            request,
-            "Could not connect to Pesapal. Please check your Pesapal credentials or try test mode."
-        )
-        return redirect("service_request_detail", request_id=service_request.id)
-
-    api_url = get_pesapal_base_url()
-    submit_order_url = f"{api_url}/api/Transactions/SubmitOrderRequest"
-
-    phone_number = getattr(request.user, "phone_number", "") or "256700000000"
-
-    order_data = {
-        "id": merchant_reference,
-        "currency": "UGX",
-        "amount": float(service_request.amount),
-        "description": f"Payment for Buildmity service request #{service_request.id}",
-        "callback_url": callback_url,
-        "billing_address": {
-            "email_address": request.user.email or "client@buildmity.com",
-            "phone_number": phone_number,
-            "country_code": "UG",
-            "first_name": request.user.first_name or request.user.username,
-            "last_name": request.user.last_name or "",
-        }
-    }
-
+    
     headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}",
+        "Content-Type": "application/json"
     }
-
-    response = requests.post(
-        submit_order_url,
-        json=order_data,
-        headers=headers,
-        timeout=30
-    )
-
-    print("Pesapal Order Status:", response.status_code)
-    print("Pesapal Order Response:", response.text)
-
-    if response.status_code not in [200, 201]:
-        messages.error(request, "Pesapal failed to create the payment order.")
-        return redirect("service_request_detail", request_id=service_request.id)
-
-    result = response.json()
-    redirect_url = result.get("redirect_url")
-
-    if not redirect_url:
-        messages.error(request, "Pesapal did not return a payment link.")
-        return redirect("service_request_detail", request_id=service_request.id)
-
-    payment.external_reference = result.get("order_tracking_id", "")
-    payment.save()
-
-    return redirect(redirect_url)
+    
+    try:
+        response = requests.post(
+            "https://api.flutterwave.com/v3/payments",
+            json=payment_data,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('status') == 'success':
+                payment.external_reference = str(result.get('data', {}).get('id', ''))
+                payment.save()
+                # Redirect to Flutterwave payment page
+                return redirect(result['data']['link'])
+            else:
+                messages.error(request, f"Payment initialization failed: {result.get('message', 'Unknown error')}")
+        else:
+            messages.error(request, f"Payment gateway error. Status: {response.status_code}")
+            
+    except requests.exceptions.Timeout:
+        messages.error(request, "Payment gateway timed out. Please try again.")
+    except requests.exceptions.ConnectionError:
+        messages.error(request, "Cannot connect to payment gateway. Please check your connection.")
+    except Exception as e:
+        messages.error(request, f"Payment error: {str(e)}")
+        # Fallback to test payment
+        return process_test_payment(request, service_request)
+    
+    return redirect('make_payment', request_id=request_id)
 
 
 def process_test_payment(request, service_request):
+    """Process test payment when Flutterwave is not available"""
     payment, created = Payment.objects.get_or_create(
         service_request=service_request,
         defaults={
-            "client": request.user,
-            "provider": service_request.provider,
-            "amount": service_request.amount,
-            "commission": service_request.amount * Decimal("0.10"),
-            "provider_amount": service_request.amount * Decimal("0.90"),
-            "transaction_id": f"TEST-{int(time.time())}",
-            "status": "paid",
-            "method": "test",
-            "paid_at": timezone.now(),
+            'client': request.user,
+            'provider': service_request.provider,
+            'amount': service_request.amount,
+            'commission': service_request.amount * Decimal('0.10'),
+            'provider_amount': service_request.amount * Decimal('0.90'),
+            'transaction_id': f"TEST-{int(timezone.now().timestamp())}",
+            'status': 'paid',
+            'method': 'test',
+            'paid_at': timezone.now(),
         }
     )
-
+    
     if not created:
-        payment.status = "paid"
-        payment.method = "test"
+        payment.status = 'paid'
         payment.paid_at = timezone.now()
         payment.save()
-
-    service_request.status = "paid"
+    
+    service_request.status = 'paid'
     service_request.save()
-
+    
     if service_request.service_need:
-        service_request.service_need.status = "paid"
+        service_request.service_need.status = 'paid'
         service_request.service_need.save()
-
+    
     AdminNotification.objects.create(
-        title="Test Payment Received",
-        message=f"Test payment of UGX {service_request.amount} received from {request.user.username}",
-        notification_type="payment",
+        title='Test Payment Received',
+        message=f'Test payment of UGX {service_request.amount} received from {request.user.username}',
+        notification_type='payment',
         related_user=service_request.provider
     )
+    
+    messages.success(request, 'Test payment successful! The provider will start working on your request.')
+    return redirect('service_request_detail', request_id=service_request.id)
 
-    messages.success(
-        request,
-        "Test payment successful! The provider will start working on your request."
-    )
+def payment_callback(request, tx_ref):
+    """Handle Flutterwave payment redirect - works for all domains"""
+    transaction_id = request.GET.get('transaction_id')
+    status = request.GET.get('status')
+    
+    FLUTTERWAVE_SECRET_KEY = getattr(settings, 'FLUTTERWAVE_SECRET_KEY', '')
+    
+    if status == 'successful' and transaction_id:
+        # Verify payment with Flutterwave
+        headers = {
+            "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}"
+        }
+        
+        try:
+            response = requests.get(
+                f"https://api.flutterwave.com/v3/transactions/{transaction_id}/verify",
+                headers=headers,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('status') == 'success' and result.get('data', {}).get('status') == 'successful':
+                    try:
+                        payment = Payment.objects.get(transaction_id=tx_ref)
+                        payment.status = 'paid'
+                        payment.paid_at = timezone.now()
+                        payment.external_reference = str(transaction_id)
+                        payment.save()
+                        
+                        service_request = payment.service_request
+                        service_request.status = 'paid'
+                        service_request.save()
+                        
+                        if service_request.service_need:
+                            service_request.service_need.status = 'paid'
+                            service_request.service_need.save()
+                        
+                        messages.success(request, 'Payment successful! The provider will start working on your request.')
+                        return redirect('service_request_detail', request_id=service_request.id)
+                        
+                    except Payment.DoesNotExist:
+                        messages.error(request, 'Payment record not found.')
+                else:
+                    messages.error(request, 'Payment verification failed.')
+            else:
+                messages.error(request, 'Unable to verify payment.')
+        except Exception as e:
+            messages.error(request, f'Payment verification error: {str(e)}')
+    else:
+        messages.error(request, 'Payment was not successful. Please try again.')
+    
+    return redirect('dashboard')
 
-    return redirect("service_request_detail", request_id=service_request.id)
+    from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+import json
 
-
-def pesapal_callback(request):
-    print("PESAPAL CALLBACK CALLED")
-    print("GET params:", request.GET)
-
-    order_tracking_id = request.GET.get("OrderTrackingId")
-    merchant_reference = request.GET.get("OrderMerchantReference")
-
-    if not merchant_reference:
-        messages.error(request, "Payment reference missing.")
-        return redirect("dashboard")
-
+@csrf_exempt
+def flutterwave_webhook(request):
+    """Handle Flutterwave webhook for async payment updates"""
+    # Skip CSRF for webhook
+    if request.method != 'POST':
+        return HttpResponse("Method not allowed", status=405)
+    
+    # Get webhook data
     try:
-        payment = Payment.objects.get(transaction_id=merchant_reference)
-    except Payment.DoesNotExist:
-        messages.error(request, "Payment record not found.")
-        return redirect("dashboard")
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponse("Invalid JSON", status=400)
+    
+    event = data.get('event')
+    
+    if event == 'charge.completed':
+        tx_ref = data.get('data', {}).get('tx_ref')
+        status = data.get('data', {}).get('status')
+        flutterwave_transaction_id = data.get('data', {}).get('id')
+        
+        if tx_ref and status:
+            try:
+                payment = Payment.objects.get(transaction_id=tx_ref)
+                
+                if status == 'successful':
+                    payment.status = 'paid'
+                    payment.paid_at = timezone.now()
+                    payment.external_reference = str(flutterwave_transaction_id)
+                    payment.save()
+                    
+                    service_request = payment.service_request
+                    service_request.status = 'paid'
+                    service_request.save()
+                    
+                    if service_request.service_need:
+                        service_request.service_need.status = 'paid'
+                        service_request.service_need.save()
+                    
+                    # Create notification for provider
+                    AdminNotification.objects.create(
+                        title='Payment Received',
+                        message=f'Payment of UGX {payment.amount} received from {payment.client.username} for request #{service_request.id}',
+                        notification_type='payment',
+                        related_user=payment.provider
+                    )
+                    
+                elif status == 'failed':
+                    payment.status = 'failed'
+                    payment.save()
+                    
+            except Payment.DoesNotExist:
+                pass
+    
+    return HttpResponse("Webhook received", status=200)
 
-    payment.external_reference = order_tracking_id or payment.external_reference
-    payment.status = "paid"
-    payment.paid_at = timezone.now()
-    payment.save()
-
-    service_request = payment.service_request
-    service_request.status = "paid"
-    service_request.save()
-
-    if service_request.service_need:
-        service_request.service_need.status = "paid"
-        service_request.service_need.save()
-
-    messages.success(
-        request,
-        "Payment successful! The provider will start working on your request."
+@login_required
+def initialize_flutterwave_payment(request, request_id):
+    """Initialize payment with Flutterwave"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
+    
+    # Get Flutterwave credentials
+    FLUTTERWAVE_SECRET_KEY = getattr(settings, 'FLUTTERWAVE_SECRET_KEY', '')
+    
+    print(f"=== FLUTTERWAVE DEBUG ===")
+    print(f"Secret Key exists: {bool(FLUTTERWAVE_SECRET_KEY)}")
+    print(f"Secret Key length: {len(FLUTTERWAVE_SECRET_KEY) if FLUTTERWAVE_SECRET_KEY else 0}")
+    
+    # If no Flutterwave credentials, use test mode
+    if not FLUTTERWAVE_SECRET_KEY:
+        print("No credentials - using test mode")
+        return process_test_payment(request, service_request)
+    
+    # Generate unique transaction reference
+    tx_ref = f"BUILD-{service_request.id}-{int(timezone.now().timestamp())}"
+    
+    # Generate dynamic callback URL
+    current_domain = request.get_host()
+    protocol = 'https' if request.is_secure() else 'http'
+    callback_url = f"{protocol}://{current_domain}/payment/callback/"
+    
+    print(f"Callback URL: {callback_url}")
+    print(f"Amount: {service_request.amount}")
+    print(f"Customer email: {request.user.email}")
+    
+    # Prepare payment data
+    payment_data = {
+        "tx_ref": tx_ref,
+        "amount": str(float(service_request.amount)),
+        "currency": "UGX",
+        "redirect_url": callback_url,
+        "payment_options": "card,mobilemoney,ussd",
+        "customer": {
+            "email": request.user.email,
+            "phonenumber": request.user.phone_number or "0000000000",
+            "name": request.user.get_full_name() or request.user.username,
+        },
+        "customizations": {
+            "title": "Buildimity Payment",
+            "description": f"Payment for service request #{service_request.id}",
+        }
+    }
+    
+    print(f"Payment data: {json.dumps(payment_data, indent=2)}")
+    
+    # Create or update payment record
+    payment, created = Payment.objects.get_or_create(
+        service_request=service_request,
+        defaults={
+            'client': request.user,
+            'provider': service_request.provider,
+            'amount': service_request.amount,
+            'commission': service_request.amount * Decimal('0.10'),
+            'provider_amount': service_request.amount * Decimal('0.90'),
+            'transaction_id': tx_ref,
+            'status': 'pending',
+            'method': 'flutterwave'
+        }
     )
+    
+    if not created:
+        payment.transaction_id = tx_ref
+        payment.status = 'pending'
+        payment.save()
+    
+    headers = {
+        "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.post(
+            "https://api.flutterwave.com/v3/payments",
+            json=payment_data,
+            headers=headers,
+            timeout=30
+        )
+        
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
+        
+        if response.status_code == 200:
+            result = response.json()
+            print(f"Result status: {result.get('status')}")
+            print(f"Result message: {result.get('message')}")
+            
+            if result.get('status') == 'success':
+                payment_link = result['data']['link']
+                print(f"Redirecting to: {payment_link}")
+                return redirect(payment_link)
+            else:
+                messages.error(request, f"Payment initialization failed: {result.get('message', 'Unknown error')}")
+                print(f"ERROR: {result.get('message')}")
+        else:
+            messages.error(request, f"Payment gateway error. Status: {response.status_code}")
+            print(f"HTTP ERROR: {response.status_code}")
+            
+    except requests.exceptions.Timeout:
+        messages.error(request, "Payment gateway timed out. Please try again.")
+        print("Timeout error")
+    except requests.exceptions.ConnectionError:
+        messages.error(request, "Cannot connect to payment gateway. Please check your connection.")
+        print("Connection error")
+    except Exception as e:
+        messages.error(request, f"Payment error: {str(e)}")
+        print(f"Exception: {str(e)}")
+        
+    return redirect('make_payment', request_id=request_id)
 
-    return redirect("service_request_detail", request_id=service_request.id)
+# Add these imports at the top of views.py
+from django.db.models import Q, Avg, Sum, Count, F
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator
+from .models import (
+    Conversation, Message, Booking, ProviderAvailability, ProviderTimeOff,
+    Invoice, PromoCode, AppliedPromo, WithdrawalRequest, FavoriteProvider,
+    SavedLocation, NotificationPreference
+)
+from decimal import Decimal
+
+# ==================== CHAT/MESSAGING VIEWS ====================
+
+@login_required
+def conversations(request):
+    """View all user conversations"""
+    user_conversations = Conversation.objects.filter(participants=request.user).annotate(
+        last_message=Subquery(
+            Message.objects.filter(conversation=OuterRef('pk'))
+            .order_by('-created_at').values('message')[:1]
+        ),
+        last_message_time=Subquery(
+            Message.objects.filter(conversation=OuterRef('pk'))
+            .order_by('-created_at').values('created_at')[:1]
+        ),
+        unread_count=Count('messages', filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user))
+    ).order_by('-last_message_time')
+    
+    return render(request, 'chat/conversations.html', {'conversations': user_conversations})
 
 
-def pesapal_ipn(request):
-    print("PESAPAL IPN CALLED")
-    print("GET params:", request.GET)
-    print("POST params:", request.POST)
-    print("KEY:", settings.PESAPAL_CONSUMER_KEY)
-    print("SECRET:", settings.PESAPAL_CONSUMER_SECRET)
-    return HttpResponse("OK")
+@login_required
+def conversation_detail(request, conversation_id):
+    """View conversation details"""
+    conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+    
+    # Mark messages as read
+    Message.objects.filter(conversation=conversation, sender__ne=request.user, is_read=False).update(
+        is_read=True, read_at=timezone.now()
+    )
+    
+    if request.method == 'POST':
+        message_text = request.POST.get('message', '').strip()
+        attachment = request.FILES.get('attachment')
+        
+        if message_text or attachment:
+            message = Message.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                message=message_text,
+                attachment=attachment
+            )
+            
+            # Update conversation updated_at
+            conversation.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'message_id': message.id,
+                    'message': message_text,
+                    'created_at': message.created_at.strftime('%Y-%m-%d %H:%M'),
+                    'sender': request.user.username
+                })
+    
+    messages_list = conversation.messages.all().order_by('created_at')
+    
+    # Get other participant
+    other_participant = conversation.participants.exclude(id=request.user.id).first()
+    
+    context = {
+        'conversation': conversation,
+        'messages': messages_list,
+        'other_participant': other_participant,
+    }
+    return render(request, 'chat/conversation_detail.html', context)
+
+
+@login_required
+def start_conversation(request, user_id):
+    """Start a new conversation with another user"""
+    other_user = get_object_or_404(User, id=user_id)
+    
+    # Check if conversation already exists
+    existing_conversation = Conversation.objects.filter(participants=request.user).filter(participants=other_user).first()
+    
+    if existing_conversation:
+        return redirect('conversation_detail', conversation_id=existing_conversation.id)
+    
+    # Create new conversation
+    conversation = Conversation.objects.create()
+    conversation.participants.add(request.user, other_user)
+    
+    return redirect('conversation_detail', conversation_id=conversation.id)
+
+
+@login_required
+def get_unread_count(request):
+    """Get unread message count for AJAX polling"""
+    unread_count = Message.objects.filter(
+        conversation__participants=request.user,
+        is_read=False
+    ).exclude(sender=request.user).count()
+    
+    return JsonResponse({'unread_count': unread_count})
+
+
+# ==================== BOOKING VIEWS ====================
+
+@login_required
+def create_booking(request, request_id):
+    """Create a booking for a service request"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id)
+    
+    if request.user not in [service_request.client, service_request.provider]:
+        messages.error(request, 'You do not have permission to create a booking for this request.')
+        return redirect('service_request_detail', request_id=request_id)
+    
+    if request.method == 'POST':
+        scheduled_date = request.POST.get('scheduled_date')
+        scheduled_time = request.POST.get('scheduled_time')
+        duration_hours = request.POST.get('duration_hours', 1)
+        
+        booking, created = Booking.objects.get_or_create(
+            service_request=service_request,
+            defaults={
+                'scheduled_date': scheduled_date,
+                'scheduled_time': scheduled_time,
+                'duration_hours': duration_hours,
+                'status': 'pending'
+            }
+        )
+        
+        if not created:
+            booking.scheduled_date = scheduled_date
+            booking.scheduled_time = scheduled_time
+            booking.duration_hours = duration_hours
+            booking.status = 'pending'
+            booking.save()
+        
+        # Send notification
+        AdminNotification.objects.create(
+            title='New Booking Request',
+            message=f'Booking request for service #{service_request.id}',
+            notification_type='general',
+            related_user=service_request.provider if request.user == service_request.client else service_request.client
+        )
+        
+        messages.success(request, 'Booking request sent successfully!')
+        return redirect('service_request_detail', request_id=request_id)
+    
+    return render(request, 'booking/create_booking.html', {'service_request': service_request})
+
+
+@login_required
+def update_booking_status(request, booking_id, status):
+    """Update booking status (confirm/cancel/reschedule)"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    
+    if request.user not in [booking.service_request.client, booking.service_request.provider]:
+        messages.error(request, 'Permission denied')
+        return redirect('dashboard')
+    
+    valid_statuses = ['confirmed', 'cancelled', 'rescheduled']
+    if status not in valid_statuses:
+        messages.error(request, 'Invalid status')
+        return redirect('service_request_detail', request_id=booking.service_request.id)
+    
+    booking.status = status
+    if status == 'confirmed':
+        booking.service_request.status = 'accepted'
+        booking.service_request.save()
+    
+    booking.save()
+    
+    messages.success(request, f'Booking {status} successfully!')
+    return redirect('service_request_detail', request_id=booking.service_request.id)
+
+
+@login_required
+def provider_availability(request):
+    """Manage provider availability"""
+    if request.user.role != User.PROVIDER:
+        messages.error(request, 'Only providers can set availability.')
+        return redirect('dashboard')
+    
+    availabilities = ProviderAvailability.objects.filter(provider=request.user)
+    time_off = ProviderTimeOff.objects.filter(provider=request.user)
+    
+    if request.method == 'POST':
+        # Update availability
+        for day in range(7):
+            is_available = request.POST.get(f'available_{day}') == 'on'
+            start_time = request.POST.get(f'start_time_{day}', '09:00')
+            end_time = request.POST.get(f'end_time_{day}', '17:00')
+            
+            availability, created = ProviderAvailability.objects.get_or_create(
+                provider=request.user,
+                day_of_week=day
+            )
+            availability.is_available = is_available
+            availability.start_time = start_time
+            availability.end_time = end_time
+            availability.save()
+        
+        messages.success(request, 'Availability updated successfully!')
+        return redirect('provider_availability')
+    
+    context = {
+        'availabilities': {a.day_of_week: a for a in availabilities},
+        'time_off': time_off,
+        'days': ProviderAvailability.DAYS_OF_WEEK,
+    }
+    return render(request, 'booking/provider_availability.html', context)
+
+
+@login_required
+def add_time_off(request):
+    """Add time off request"""
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        reason = request.POST.get('reason', '')
+        
+        ProviderTimeOff.objects.create(
+            provider=request.user,
+            start_date=start_date,
+            end_date=end_date,
+            reason=reason
+        )
+        
+        messages.success(request, 'Time off request submitted.')
+        return redirect('provider_availability')
+    
+    return render(request, 'booking/add_time_off.html')
+
+
+# ==================== INVOICE VIEWS ====================
+
+@login_required
+def generate_invoice(request, request_id):
+    """Generate invoice for a service request"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id)
+    
+    if request.user not in [service_request.client, service_request.provider]:
+        messages.error(request, 'Permission denied')
+        return redirect('dashboard')
+    
+    invoice, created = Invoice.objects.get_or_create(
+        service_request=service_request,
+        defaults={
+            'due_date': timezone.now().date() + timedelta(days=14),
+            'subtotal': service_request.amount,
+            'total': service_request.amount,
+        }
+    )
+    
+    return render(request, 'invoice/invoice_detail.html', {'invoice': invoice})
+
+
+@login_required
+def download_invoice(request, invoice_id):
+    """Download invoice as PDF"""
+    import io
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import inch
+    from django.http import FileResponse
+    
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Add content to PDF
+    p.drawString(1*inch, height - 1*inch, f"INVOICE #{invoice.invoice_number}")
+    p.drawString(1*inch, height - 1.5*inch, f"Date: {invoice.issue_date}")
+    p.drawString(1*inch, height - 2*inch, f"Due Date: {invoice.due_date}")
+    p.drawString(1*inch, height - 2.5*inch, f"Service: {invoice.service_request.service.name}")
+    p.drawString(1*inch, height - 3*inch, f"Amount: UGX {invoice.total}")
+    p.drawString(1*inch, height - 3.5*inch, "Terms: Payment due within 14 days")
+    
+    p.showPage()
+    p.save()
+    
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f'invoice_{invoice.invoice_number}.pdf')
+
+
+# ==================== PROMO CODE VIEWS ====================
+
+@login_required
+def apply_promo_code(request, request_id):
+    """Apply promo code to service request"""
+    service_request = get_object_or_404(ServiceRequest, id=request_id, client=request.user)
+    
+    if request.method == 'POST':
+        code = request.POST.get('promo_code', '').strip().upper()
+        
+        try:
+            promo = PromoCode.objects.get(code=code)
+            
+            if not promo.is_valid():
+                messages.error(request, 'This promo code is invalid or expired.')
+            else:
+                discount = promo.calculate_discount(service_request.amount)
+                final_amount = service_request.amount - discount
+                
+                AppliedPromo.objects.create(
+                    promo_code=promo,
+                    service_request=service_request,
+                    discount_amount=discount,
+                    final_amount=final_amount
+                )
+                
+                promo.used_count += 1
+                promo.save()
+                
+                service_request.amount = final_amount
+                service_request.save()
+                
+                messages.success(request, f'Promo code applied! You saved UGX {discount}')
+        except PromoCode.DoesNotExist:
+            messages.error(request, 'Invalid promo code.')
+    
+    return redirect('service_request_detail', request_id=request_id)
+
+
+# ==================== WITHDRAWAL VIEWS ====================
+
+@login_required
+def request_withdrawal(request):
+    """Request withdrawal of earnings"""
+    if request.user.role != User.PROVIDER:
+        messages.error(request, 'Only providers can request withdrawals.')
+        return redirect('dashboard')
+    
+    available_balance = request.user.account_balance
+    
+    if request.method == 'POST':
+        amount = Decimal(request.POST.get('amount', 0))
+        method = request.POST.get('method')
+        account_details = request.POST.get('account_details')
+        
+        if amount > available_balance:
+            messages.error(request, 'Insufficient balance.')
+        elif amount < 10000:
+            messages.error(request, 'Minimum withdrawal amount is UGX 10,000')
+        else:
+            withdrawal = WithdrawalRequest.objects.create(
+                provider=request.user,
+                amount=amount,
+                method=method,
+                account_details=account_details
+            )
+            
+            # Reduce balance (or hold)
+            request.user.account_balance -= amount
+            request.user.save()
+            
+            messages.success(request, f'Withdrawal request submitted for UGX {amount}')
+            return redirect('my_withdrawals')
+    
+    context = {
+        'available_balance': available_balance,
+        'min_withdrawal': 10000,
+    }
+    return render(request, 'withdrawal/request_withdrawal.html', context)
+
+
+@login_required
+def my_withdrawals(request):
+    """View withdrawal history"""
+    if request.user.role != User.PROVIDER:
+        return redirect('dashboard')
+    
+    withdrawals = WithdrawalRequest.objects.filter(provider=request.user).order_by('-created_at')
+    
+    return render(request, 'withdrawal/withdrawal_history.html', {'withdrawals': withdrawals})
+
+
+@staff_member_required
+def admin_withdrawals(request):
+    """Admin view for withdrawal requests"""
+    withdrawals = WithdrawalRequest.objects.select_related('provider').order_by('-created_at')
+    pending_count = withdrawals.filter(status='pending').count()
+    
+    if request.method == 'POST':
+        withdrawal_id = request.POST.get('withdrawal_id')
+        action = request.POST.get('action')
+        admin_notes = request.POST.get('admin_notes', '')
+        
+        withdrawal = get_object_or_404(WithdrawalRequest, id=withdrawal_id)
+        withdrawal.admin_notes = admin_notes
+        
+        if action == 'approve':
+            withdrawal.status = 'completed'
+            withdrawal.processed_by = request.user
+            withdrawal.processed_at = timezone.now()
+            messages.success(request, f'Withdrawal #{withdrawal.id} approved')
+        elif action == 'reject':
+            withdrawal.status = 'rejected'
+            withdrawal.processed_by = request.user
+            withdrawal.processed_at = timezone.now()
+            # Refund balance
+            withdrawal.provider.account_balance += withdrawal.amount
+            withdrawal.provider.save()
+            messages.warning(request, f'Withdrawal #{withdrawal.id} rejected')
+        
+        withdrawal.save()
+        return redirect('admin_withdrawals')
+    
+    context = {
+        'withdrawals': withdrawals,
+        'pending_count': pending_count,
+    }
+    return render(request, 'admin/withdrawals.html', context)
+
+
+# ==================== FAVORITE PROVIDERS ====================
+
+@login_required
+def toggle_favorite(request, provider_id):
+    """Add or remove provider from favorites"""
+    provider = get_object_or_404(User, id=provider_id, role=User.PROVIDER)
+    
+    favorite = FavoriteProvider.objects.filter(client=request.user, provider=provider)
+    
+    if favorite.exists():
+        favorite.delete()
+        is_favorite = False
+        message = f'{provider.username} removed from favorites'
+    else:
+        FavoriteProvider.objects.create(client=request.user, provider=provider)
+        is_favorite = True
+        message = f'{provider.username} added to favorites'
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'is_favorite': is_favorite, 'message': message})
+    
+    messages.success(request, message)
+    return redirect('provider_detail', provider_id=provider_id)
+
+
+@login_required
+def my_favorites(request):
+    """View list of favorite providers"""
+    favorites = FavoriteProvider.objects.filter(client=request.user).select_related('provider')
+    
+    return render(request, 'favorites.html', {'favorites': favorites})
+
+
+# ==================== SAVED LOCATIONS ====================
+
+@login_required
+def saved_locations(request):
+    """Manage saved locations"""
+    locations = SavedLocation.objects.filter(user=request.user)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        location_type = request.POST.get('location_type')
+        address = request.POST.get('address')
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        is_default = request.POST.get('is_default') == 'on'
+        
+        if is_default:
+            SavedLocation.objects.filter(user=request.user, is_default=True).update(is_default=False)
+        
+        SavedLocation.objects.create(
+            user=request.user,
+            name=name,
+            location_type=location_type,
+            address=address,
+            latitude=latitude,
+            longitude=longitude,
+            is_default=is_default
+        )
+        
+        messages.success(request, 'Location saved successfully!')
+        return redirect('saved_locations')
+    
+    return render(request, 'saved_locations.html', {'locations': locations})
+
+
+@login_required
+def delete_saved_location(request, location_id):
+    """Delete saved location"""
+    location = get_object_or_404(SavedLocation, id=location_id, user=request.user)
+    location.delete()
+    messages.success(request, 'Location deleted')
+    return redirect('saved_locations')
+
+
+# ==================== NOTIFICATION CENTER ====================
+
+@login_required
+def notification_center(request):
+    """View all notifications"""
+    notifications = AdminNotification.objects.filter(related_user=request.user).order_by('-created_at')
+    
+    # Mark all as read
+    if request.GET.get('mark_all_read'):
+        notifications.update(is_read=True)
+        return redirect('notification_center')
+    
+    # Mark single as read
+    if request.GET.get('mark_read'):
+        notification = get_object_or_404(AdminNotification, id=request.GET['mark_read'])
+        notification.is_read = True
+        notification.save()
+        return redirect('notification_center')
+    
+    # Pagination
+    paginator = Paginator(notifications, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'notifications': page_obj,
+        'unread_count': notifications.filter(is_read=False).count(),
+    }
+    return render(request, 'notifications.html', context)
+
+
+@login_required
+def notification_preferences(request):
+    """Manage notification preferences"""
+    preferences, created = NotificationPreference.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        preferences.email_notifications = request.POST.get('email_notifications') == 'on'
+        preferences.push_notifications = request.POST.get('push_notifications') == 'on'
+        preferences.sms_notifications = request.POST.get('sms_notifications') == 'on'
+        preferences.new_message = request.POST.get('new_message') == 'on'
+        preferences.booking_confirmed = request.POST.get('booking_confirmed') == 'on'
+        preferences.payment_received = request.POST.get('payment_received') == 'on'
+        preferences.job_completed = request.POST.get('job_completed') == 'on'
+        preferences.promo_offers = request.POST.get('promo_offers') == 'on'
+        preferences.review_received = request.POST.get('review_received') == 'on'
+        preferences.save()
+        
+        messages.success(request, 'Notification preferences updated!')
+        return redirect('notification_preferences')
+    
+    return render(request, 'notification_preferences.html', {'preferences': preferences})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
