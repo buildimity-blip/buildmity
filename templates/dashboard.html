@@ -7,6 +7,8 @@
     <title>Dashboard | Buildimity</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY|default:'AIzaSyD5MMXNAyFgmaGNgMMC_Q81dbKXtAnsLPM' }}&libraries=places"></script>
     <meta name="csrf-token" content="{{ csrf_token }}">
     <style>
         * {
@@ -26,7 +28,7 @@
         .top-nav {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(12px);
-            padding: 14px 24px;
+            padding: 12px 24px;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -44,7 +46,7 @@
         }
 
         .logo h1 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
             background: linear-gradient(135deg, #60a5fa, #a78bfa);
             -webkit-background-clip: text;
@@ -123,7 +125,7 @@
             padding: 20px 24px;
         }
 
-        /* Welcome Banner - Compact */
+        /* Welcome Banner */
         .welcome-banner {
             background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.2));
             backdrop-filter: blur(10px);
@@ -141,24 +143,23 @@
         .welcome-banner p {
             color: #94a3b8;
             font-size: 0.85rem;
-            margin-bottom: 16px;
         }
 
         .stats-row {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
+            margin-top: 16px;
         }
 
         .stat-item {
             background: rgba(255,255,255,0.1);
             border-radius: 12px;
-            padding: 12px 20px;
-            min-width: 100px;
+            padding: 10px 18px;
         }
 
         .stat-item .value {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
         }
 
@@ -167,7 +168,7 @@
             color: #94a3b8;
         }
 
-        /* Search Bar - Compact */
+        /* Search Bar */
         .search-card {
             background: rgba(255,255,255,0.05);
             backdrop-filter: blur(10px);
@@ -175,17 +176,6 @@
             padding: 16px 20px;
             margin-bottom: 24px;
             border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .search-card h3 {
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-
-        .search-card p {
-            color: #94a3b8;
-            font-size: 0.75rem;
-            margin-bottom: 12px;
         }
 
         .search-form {
@@ -217,10 +207,37 @@
             border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 0.85rem;
         }
 
-        /* Tab Navigation */
+        /* Location Status */
+        .location-status {
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(2); }
+        }
+
+        /* Tabs */
         .tabs {
             display: flex;
             gap: 4px;
@@ -232,7 +249,7 @@
         }
 
         .tab-btn {
-            padding: 10px 24px;
+            padding: 10px 20px;
             background: transparent;
             border: none;
             color: #94a3b8;
@@ -262,7 +279,7 @@
             display: block;
         }
 
-        /* List Items - Compact */
+        /* List Items */
         .list-item {
             display: flex;
             justify-content: space-between;
@@ -316,7 +333,6 @@
         .badge-in_progress { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
         .badge-completed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
         .badge-negotiating { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-        .badge-open { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 
         .item-actions {
             display: flex;
@@ -324,7 +340,15 @@
             flex-wrap: wrap;
         }
 
-        /* Sidebar - Compact */
+        /* Map Container */
+        .map-container {
+            height: 300px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        /* Sidebar */
         .sidebar {
             display: flex;
             flex-direction: column;
@@ -362,11 +386,7 @@
             color: white;
         }
 
-        .sidebar-item:last-child {
-            border-bottom: none;
-        }
-
-        /* Two Column Layout */
+        /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 280px;
@@ -379,37 +399,43 @@
             }
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 30px 20px;
             color: #64748b;
-            font-size: 0.85rem;
         }
 
-        /* Alert */
         .alert {
             background: rgba(37, 99, 235, 0.2);
             border-left: 3px solid #2563eb;
             padding: 10px 16px;
             border-radius: 10px;
             margin-bottom: 16px;
-            font-size: 0.8rem;
         }
 
-        /* Section Title */
-        .section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748b;
-            margin-bottom: 12px;
+        /* Work Gallery */
+        .work-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .work-image {
+            border-radius: 10px;
+            overflow: hidden;
+            height: 80px;
+        }
+
+        .work-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation -->
     <nav class="top-nav">
         <div class="nav-container">
             <div class="logo">
@@ -449,10 +475,23 @@
             {% endfor %}
         {% endif %}
 
+        <!-- Location Status -->
+        <div class="location-status">
+            <div>
+                <span class="live-dot"></span>
+                <span style="margin-left: 8px;"><i class="fas fa-map-marker-alt"></i> Live Location Tracking Active</span>
+            </div>
+            <div>
+                <span id="location-coords">Waiting for GPS...</span>
+                <button onclick="updateManualLocation()" class="btn btn-outline btn-sm" style="margin-left: 10px;">
+                    <i class="fas fa-sync-alt"></i> Update
+                </button>
+            </div>
+        </div>
+
         <!-- ==================== CLIENT DASHBOARD ==================== -->
         {% if user.role == 'client' %}
 
-            <!-- Welcome Banner -->
             <div class="welcome-banner">
                 <div class="stats-row">
                     <div class="stat-item">
@@ -474,7 +513,6 @@
                 </div>
             </div>
 
-            <!-- Search Bar -->
             <div class="search-card">
                 <form action="{% url 'client_search' %}" method="get" class="search-form">
                     <input type="text" name="q" placeholder="Search for a service..." value="{{ request.GET.q }}">
@@ -483,24 +521,24 @@
             </div>
 
             <div class="dashboard-grid">
-                <!-- Main Content -->
                 <div>
-                    <!-- Tabs -->
                     <div class="tabs">
                         <button class="tab-btn active" onclick="showTab('requests')">
                             <i class="fas fa-comments"></i> Requests
                         </button>
                         <button class="tab-btn" onclick="showTab('needs')">
-                            <i class="fas fa-list-alt"></i> Service Needs
+                            <i class="fas fa-list-alt"></i> Needs
                         </button>
                         <button class="tab-btn" onclick="showTab('payments')">
                             <i class="fas fa-credit-card"></i> Payments
+                        </button>
+                        <button class="tab-btn" onclick="showTab('tracking')">
+                            <i class="fas fa-map-marker-alt"></i> Tracking
                         </button>
                     </div>
 
                     <!-- Active Requests Tab -->
                     <div id="requests-tab" class="tab-content active">
-                        <div class="section-title"><i class="fas fa-clock"></i> ACTIVE REQUESTS</div>
                         {% if requests %}
                             {% for req in requests %}
                             <div class="list-item">
@@ -522,6 +560,9 @@
                                     {% endif %}
                                     {% if req.status == 'in_progress' %}
                                         <a href="{% url 'confirm_completion' req.id %}" class="btn btn-warning btn-sm">Complete</a>
+                                        <button onclick="trackServiceLocation({{ req.id }})" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-map-marker-alt"></i> Track
+                                        </button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -533,21 +574,18 @@
 
                     <!-- Service Needs Tab -->
                     <div id="needs-tab" class="tab-content">
-                        <div class="section-title"><i class="fas fa-plus-circle"></i> RECENT NEEDS</div>
                         {% if needs %}
                             {% for need in needs %}
                             <div class="list-item">
                                 <div class="item-info">
-                                    <div class="item-title">
-                                        {% if need.service %}{{ need.service.name }}{% elif need.custom_service_name %}{{ need.custom_service_name }}{% else %}Service Need{% endif %}
-                                    </div>
+                                    <div class="item-title">{% if need.service %}{{ need.service.name }}{% elif need.custom_service_name %}{{ need.custom_service_name }}{% endif %}</div>
                                     <div class="item-meta">
                                         <span><i class="fas fa-map-marker-alt"></i> {{ need.location|default:"Anywhere" }}</span>
                                         <span><i class="fas fa-calendar"></i> {{ need.created_at|date:"M d" }}</span>
                                     </div>
                                 </div>
                                 <div class="item-status">
-                                    <span class="badge badge-{{ need.status|default:'open' }}">{{ need.status|default:"Open" }}</span>
+                                    <span class="badge badge-pending">{{ need.status|default:"Open" }}</span>
                                 </div>
                                 <div class="item-actions">
                                     <a href="{% url 'match_providers' need.id %}" class="btn btn-primary btn-sm">Find Providers</a>
@@ -555,25 +593,21 @@
                             </div>
                             {% endfor %}
                         {% else %}
-                            <div class="empty-state">No service needs yet. <a href="{% url 'create_service_need' %}">Create one</a></div>
+                            <div class="empty-state">No service needs</div>
                         {% endif %}
                         <div style="margin-top: 12px; text-align: center;">
-                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">+ New Service Need</a>
+                            <a href="{% url 'create_service_need' %}" class="btn btn-primary btn-sm">+ New Need</a>
                         </div>
                     </div>
 
                     <!-- Payments Tab -->
                     <div id="payments-tab" class="tab-content">
-                        <div class="section-title"><i class="fas fa-history"></i> PAYMENT HISTORY</div>
                         {% if payments %}
                             {% for payment in payments %}
                             <div class="list-item">
                                 <div class="item-info">
                                     <div class="item-title">Request #{{ payment.service_request.id }}</div>
-                                    <div class="item-meta">
-                                        <span><i class="fas fa-user"></i> {{ payment.provider.username }}</span>
-                                        <span><i class="fas fa-calendar"></i> {{ payment.created_at|date:"M d, Y" }}</span>
-                                    </div>
+                                    <div class="item-meta">{{ payment.provider.username }} • {{ payment.created_at|date:"M d, Y" }}</div>
                                 </div>
                                 <div class="item-status">
                                     <span class="badge badge-{{ payment.status }}">{{ payment.status }}</span>
@@ -587,28 +621,28 @@
                             <div class="empty-state">No payment history</div>
                         {% endif %}
                     </div>
+
+                    <!-- Tracking Tab -->
+                    <div id="tracking-tab" class="tab-content">
+                        <div id="service-tracking-map" class="map-container"></div>
+                        <div id="tracking-info" class="empty-state">Select an active service request to track provider location</div>
+                        <div id="tracking-details" style="display: none;">
+                            <div class="stats-row">
+                                <div class="stat-item"><div class="value" id="track-distance">0 km</div><div class="label">Distance</div></div>
+                                <div class="stat-item"><div class="value" id="track-status">-</div><div class="label">Status</div></div>
+                                <div class="stat-item"><div class="value" id="track-update">-</div><div class="label">Last Update</div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Sidebar -->
                 <div class="sidebar">
                     <div class="sidebar-card">
                         <div class="sidebar-header"><i class="fas fa-bolt"></i> Quick Actions</div>
-                        <a href="{% url 'create_service_need' %}" class="sidebar-item">
-                            <span><i class="fas fa-plus-circle"></i> Post a Need</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="javascript:void(0)" onclick="updateUserLocation()" class="sidebar-item">
-                            <span><i class="fas fa-location-dot"></i> Update Location</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="{% url 'my_favorites' %}" class="sidebar-item">
-                            <span><i class="fas fa-heart"></i> Favorites</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="{% url 'notification_center' %}" class="sidebar-item">
-                            <span><i class="fas fa-bell"></i> Notifications</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
+                        <a href="{% url 'create_service_need' %}" class="sidebar-item">Post a Need</a>
+                        <a href="javascript:void(0)" onclick="updateManualLocation()" class="sidebar-item">Update Location</a>
+                        <a href="{% url 'my_favorites' %}" class="sidebar-item">Favorite Providers</a>
+                        <a href="{% url 'notification_center' %}" class="sidebar-item">Notifications</a>
                     </div>
 
                     <div class="sidebar-card">
@@ -628,69 +662,38 @@
         <!-- ==================== PROVIDER DASHBOARD ==================== -->
         {% elif user.role == 'provider' %}
 
-            <!-- Welcome Banner -->
             <div class="welcome-banner">
                 <div class="stats-row">
-                    <div class="stat-item">
-                        <div class="value">{{ total_requests|default:0 }}</div>
-                        <div class="label">Total</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">{{ accepted_requests|default:0 }}</div>
-                        <div class="label">Active</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">{{ completed_requests|default:0 }}</div>
-                        <div class="label">Completed</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">UGX {{ total_earnings|default:"0"|floatformat:0 }}</div>
-                        <div class="label">Earnings</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">{{ user.average_rating|default:"0.0" }}</div>
-                        <div class="label">Rating</div>
-                    </div>
+                    <div class="stat-item"><div class="value">{{ total_requests|default:0 }}</div><div class="label">Total</div></div>
+                    <div class="stat-item"><div class="value">{{ accepted_requests|default:0 }}</div><div class="label">Active</div></div>
+                    <div class="stat-item"><div class="value">{{ completed_requests|default:0 }}</div><div class="label">Completed</div></div>
+                    <div class="stat-item"><div class="value">UGX {{ total_earnings|default:0|floatformat:0 }}</div><div class="label">Earnings</div></div>
+                    <div class="stat-item"><div class="value">{{ user.average_rating|default:"0.0" }}</div><div class="label">Rating</div></div>
                 </div>
             </div>
 
             <div class="dashboard-grid">
-                <!-- Main Content -->
                 <div>
-                    <!-- Tabs -->
                     <div class="tabs">
                         <button class="tab-btn active" onclick="showTab('incoming')">
                             <i class="fas fa-inbox"></i> Incoming
-                            {% if pending_requests > 0 %}
-                                <span class="badge bg-danger" style="margin-left: 5px;">{{ pending_requests }}</span>
-                            {% endif %}
+                            {% if pending_requests > 0 %}<span style="background: #ef4444; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">{{ pending_requests }}</span>{% endif %}
                         </button>
-                        <button class="tab-btn" onclick="showTab('active')">
-                            <i class="fas fa-play-circle"></i> Active
-                        </button>
-                        <button class="tab-btn" onclick="showTab('completed')">
-                            <i class="fas fa-check-circle"></i> Completed
-                        </button>
+                        <button class="tab-btn" onclick="showTab('active')"><i class="fas fa-play-circle"></i> Active</button>
+                        <button class="tab-btn" onclick="showTab('completed')"><i class="fas fa-check-circle"></i> Completed</button>
                     </div>
 
-                    <!-- Incoming Requests Tab -->
+                    <!-- Incoming Tab -->
                     <div id="incoming-tab" class="tab-content active">
-                        <div class="section-title"><i class="fas fa-clock"></i> WAITING FOR RESPONSE</div>
                         {% if requests %}
                             {% for req in requests %}
                                 {% if req.status == 'pending' or req.status == 'negotiating' %}
                                 <div class="list-item">
                                     <div class="item-info">
                                         <div class="item-title">{{ req.service_need.service_display|default:req.service.name }}</div>
-                                        <div class="item-meta">
-                                            <span><i class="fas fa-user"></i> {{ req.client.username }}</span>
-                                            <span><i class="fas fa-calendar"></i> {{ req.created_at|date:"M d" }}</span>
-                                            <span><i class="fas fa-money-bill"></i> UGX {{ req.amount|floatformat:0 }}</span>
-                                        </div>
+                                        <div class="item-meta">{{ req.client.username }} • UGX {{ req.amount|floatformat:0 }}</div>
                                     </div>
-                                    <div class="item-status">
-                                        <span class="badge badge-{{ req.status }}">{{ req.status }}</span>
-                                    </div>
+                                    <div class="item-status"><span class="badge badge-{{ req.status }}">{{ req.status }}</span></div>
                                     <div class="item-actions">
                                         <form method="post" action="{% url 'update_request_status' req.id 'accepted' %}" style="display: inline;">
                                             {% csrf_token %}
@@ -709,23 +712,17 @@
                         {% endif %}
                     </div>
 
-                    <!-- Active Jobs Tab -->
+                    <!-- Active Tab -->
                     <div id="active-tab" class="tab-content">
-                        <div class="section-title"><i class="fas fa-play-circle"></i> ACTIVE JOBS</div>
                         {% if requests %}
                             {% for req in requests %}
                                 {% if req.status == 'accepted' or req.status == 'paid' or req.status == 'in_progress' %}
                                 <div class="list-item">
                                     <div class="item-info">
                                         <div class="item-title">{{ req.service_need.service_display|default:req.service.name }}</div>
-                                        <div class="item-meta">
-                                            <span><i class="fas fa-user"></i> {{ req.client.username }}</span>
-                                            <span><i class="fas fa-calendar"></i> {{ req.created_at|date:"M d" }}</span>
-                                        </div>
+                                        <div class="item-meta">{{ req.client.username }}</div>
                                     </div>
-                                    <div class="item-status">
-                                        <span class="badge badge-{{ req.status }}">{{ req.status }}</span>
-                                    </div>
+                                    <div class="item-status"><span class="badge badge-{{ req.status }}">{{ req.status }}</span></div>
                                     <div class="item-actions">
                                         {% if req.status == 'paid' %}
                                             <form method="post" action="{% url 'update_request_status' req.id 'in_progress' %}">
@@ -733,10 +730,8 @@
                                                 <button type="submit" class="btn btn-warning btn-sm">Start</button>
                                             </form>
                                         {% endif %}
-                                        {% if req.status == 'in_progress' %}
-                                            <a href="{% url 'provider_confirm_completion' req.id %}" class="btn btn-success btn-sm">Complete</a>
-                                        {% endif %}
                                         <a href="{% url 'service_request_detail' req.id %}" class="btn btn-outline btn-sm">Details</a>
+                                        <button onclick="trackServiceLocation({{ req.id }})" class="btn btn-primary btn-sm"><i class="fas fa-map-marker-alt"></i> Track Client</button>
                                     </div>
                                 </div>
                                 {% endif %}
@@ -746,79 +741,52 @@
                         {% endif %}
                     </div>
 
-                    <!-- Completed Jobs Tab -->
+                    <!-- Completed Tab -->
                     <div id="completed-tab" class="tab-content">
-                        <div class="section-title"><i class="fas fa-check-circle"></i> RECENTLY COMPLETED</div>
                         {% if requests %}
                             {% for req in requests %}
                                 {% if req.status == 'completed' %}
                                 <div class="list-item">
                                     <div class="item-info">
                                         <div class="item-title">{{ req.service_need.service_display|default:req.service.name }}</div>
-                                        <div class="item-meta">
-                                            <span><i class="fas fa-user"></i> {{ req.client.username }}</span>
-                                            <span><i class="fas fa-calendar"></i> {{ req.completed_at|date:"M d"|default:req.created_at|date:"M d" }}</span>
-                                        </div>
+                                        <div class="item-meta">{{ req.client.username }} • {{ req.completed_at|date:"M d" }}</div>
                                     </div>
-                                    <div class="item-status">
-                                        <span class="badge badge-completed">completed</span>
-                                    </div>
-                                    <div class="item-actions">
-                                        <a href="{% url 'service_request_detail' req.id %}" class="btn btn-outline btn-sm">View</a>
-                                    </div>
+                                    <div class="item-status"><span class="badge badge-completed">completed</span></div>
+                                    <div class="item-actions"><a href="{% url 'service_request_detail' req.id %}" class="btn btn-outline btn-sm">View</a></div>
                                 </div>
                                 {% endif %}
                             {% endfor %}
                         {% else %}
-                            <div class="empty-state">No completed jobs yet</div>
+                            <div class="empty-state">No completed jobs</div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Sidebar -->
                 <div class="sidebar">
                     <div class="sidebar-card">
                         <div class="sidebar-header"><i class="fas fa-chart-line"></i> Performance</div>
-                        <div class="sidebar-item">
-                            <span>Completion Rate</span>
-                            <strong>{{ completion_rate|default:0 }}%</strong>
-                        </div>
-                        <div class="sidebar-item">
-                            <span>Response Time</span>
-                            <strong>{{ avg_response_time|default:0 }} min</strong>
-                        </div>
+                        <div class="sidebar-item"><span>Completion Rate</span><strong>{{ completion_rate|default:0 }}%</strong></div>
+                        <div class="sidebar-item"><span>Balance</span><strong>UGX {{ user.account_balance|floatformat:0 }}</strong></div>
                     </div>
 
                     <div class="sidebar-card">
                         <div class="sidebar-header"><i class="fas fa-bolt"></i> Quick Actions</div>
-                        <a href="{% url 'upload_work_image' %}" class="sidebar-item">
-                            <span><i class="fas fa-upload"></i> Upload Work</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="{% url 'provider_availability' %}" class="sidebar-item">
-                            <span><i class="fas fa-calendar"></i> Set Availability</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="{% url 'request_withdrawal' %}" class="sidebar-item">
-                            <span><i class="fas fa-money-bill"></i> Withdraw</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="{% url 'provider_profile' %}" class="sidebar-item">
-                            <span><i class="fas fa-user-edit"></i> Edit Profile</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
+                        <a href="{% url 'upload_work_image' %}" class="sidebar-item">Upload Work</a>
+                        <a href="{% url 'provider_availability' %}" class="sidebar-item">Set Availability</a>
+                        <a href="{% url 'request_withdrawal' %}" class="sidebar-item">Withdraw</a>
+                        <a href="{% url 'provider_profile' %}" class="sidebar-item">Edit Profile</a>
                     </div>
 
+                    {% if work_images %}
                     <div class="sidebar-card">
-                        <div class="sidebar-header"><i class="fas fa-star"></i> Your Rating</div>
-                        <div class="sidebar-item" style="justify-content: center;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: 800;">{{ user.average_rating|default:"0.0" }}</div>
-                                <div class="text-muted" style="font-size: 0.7rem;">from {{ user.total_ratings }} reviews</div>
-                                <a href="{% url 'provider_ratings' user.id %}" style="font-size: 0.7rem;">View Reviews</a>
-                            </div>
+                        <div class="sidebar-header"><i class="fas fa-images"></i> Recent Work</div>
+                        <div class="work-grid">
+                            {% for img in work_images|slice:":4" %}
+                            <div class="work-image"><img src="{{ img.image.url }}"></div>
+                            {% endfor %}
                         </div>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -826,60 +794,109 @@
         {% elif user.role == 'admin' %}
             <div class="welcome-banner">
                 <div class="stats-row">
-                    <div class="stat-item">
-                        <div class="value">{{ total_users|default:0 }}</div>
-                        <div class="label">Users</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">{{ total_providers|default:0 }}</div>
-                        <div class="label">Providers</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">{{ total_clients|default:0 }}</div>
-                        <div class="label">Clients</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value">UGX {{ total_revenue|default:0|floatformat:0 }}</div>
-                        <div class="label">Revenue</div>
-                    </div>
+                    <div class="stat-item"><div class="value">{{ total_users|default:0 }}</div><div class="label">Users</div></div>
+                    <div class="stat-item"><div class="value">{{ total_providers|default:0 }}</div><div class="label">Providers</div></div>
+                    <div class="stat-item"><div class="value">{{ total_clients|default:0 }}</div><div class="label">Clients</div></div>
+                    <div class="stat-item"><div class="value">UGX {{ total_revenue|default:0|floatformat:0 }}</div><div class="label">Revenue</div></div>
                 </div>
             </div>
             <div class="dashboard-grid">
-                <div>
-                    <div class="list-item">
-                        <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Full Admin Dashboard</a>
-                        <a href="/admin/" class="btn btn-outline">Django Admin</a>
-                    </div>
-                </div>
-                <div>
-                    <div class="sidebar-card">
-                        <div class="sidebar-header">Admin Actions</div>
-                        <a href="{% url 'admin_withdrawals' %}" class="sidebar-item">Pending Withdrawals</a>
-                        <a href="{% url 'admin_disputes' %}" class="sidebar-item">Disputes</a>
-                    </div>
+                <div><a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Full Admin Dashboard</a></div>
+                <div class="sidebar-card">
+                    <div class="sidebar-header">Admin Actions</div>
+                    <a href="{% url 'admin_withdrawals' %}" class="sidebar-item">Pending Withdrawals</a>
+                    <a href="{% url 'admin_disputes' %}" class="sidebar-item">Disputes</a>
+                    <a href="{% url 'admin_location_tracker' %}" class="sidebar-item">Live Location Tracker</a>
                 </div>
             </div>
-        {% else %}
-            <div class="empty-state">No dashboard available</div>
         {% endif %}
     </main>
 
     <script>
+        let map = null;
+        let marker = null;
+        let trackingInterval = null;
+        let currentTrackedRequestId = null;
+
         function showTab(tabId) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            // Show selected tab
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId + '-tab').classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function updateManualLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    updateLocation(position.coords.latitude, position.coords.longitude);
+                });
+            }
+        }
+
+        function updateLocation(lat, lng) {
+            document.getElementById('location-coords').innerHTML = `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
             
-            // Update active button
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent.toLowerCase().includes(tabId)) {
-                    btn.classList.add('active');
-                }
+            fetch('/api/location/update/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ latitude: lat, longitude: lng })
             });
+        }
+
+        function trackServiceLocation(requestId) {
+            currentTrackedRequestId = requestId;
+            
+            // Show tracking tab
+            if (document.getElementById('tracking-tab')) {
+                showTab('tracking');
+            }
+            
+            document.getElementById('tracking-details').style.display = 'block';
+            document.getElementById('tracking-info').style.display = 'none';
+            
+            // Initialize map
+            initTrackingMap();
+            
+            // Start tracking
+            if (trackingInterval) clearInterval(trackingInterval);
+            fetchServiceLocation(requestId);
+            trackingInterval = setInterval(() => fetchServiceLocation(requestId), 10000);
+        }
+
+        function initTrackingMap() {
+            if (map) return;
+            map = new google.maps.Map(document.getElementById('service-tracking-map'), {
+                zoom: 13,
+                center: { lat: 0.3136, lng: 32.5811 },
+                styles: [{ featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
+            });
+        }
+
+        function fetchServiceLocation(requestId) {
+            fetch(`/api/service/${requestId}/track/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('track-status').innerHTML = data.status;
+                    document.getElementById('track-distance').innerHTML = data.distance_km ? data.distance_km + ' km' : 'N/A';
+                    document.getElementById('track-update').innerHTML = new Date().toLocaleTimeString();
+                    
+                    // Update map with marker
+                    if (map && data.provider && data.provider.location) {
+                        const pos = { lat: data.provider.location.lat, lng: data.provider.location.lng };
+                        if (marker) marker.setMap(null);
+                        marker = new google.maps.Marker({ position: pos, map: map, title: data.provider.username });
+                        map.setCenter(pos);
+                        
+                        // Add client marker if available
+                        if (data.client && data.client.location) {
+                            new google.maps.Marker({
+                                position: { lat: data.client.location.lat, lng: data.client.location.lng },
+                                map: map,
+                                title: data.client.username,
+                                icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                            });
+                        }
+                    }
+                });
         }
 
         function getCookie(name) {
@@ -894,23 +911,20 @@
             }
             return value;
         }
-        
-        function updateUserLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    fetch("{% url 'update_location' %}", {
-                        method: "POST",
-                        headers: { 
-                            "Content-Type": "application/x-www-form-urlencoded", 
-                            "X-CSRFToken": getCookie('csrftoken') 
-                        },
-                        body: `latitude=${position.coords.latitude}&longitude=${position.coords.longitude}`
-                    }).then(() => location.reload());
-                });
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
+
+        // Start live tracking
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                updateLocation(position.coords.latitude, position.coords.longitude);
+            });
+            navigator.geolocation.watchPosition(function(position) {
+                updateLocation(position.coords.latitude, position.coords.longitude);
+            });
         }
+
+        window.addEventListener('beforeunload', function() {
+            if (trackingInterval) clearInterval(trackingInterval);
+        });
     </script>
 </body>
 </html>
